@@ -1,0 +1,285 @@
+/**
+ * Shared logic for Vercel serverless API routes.
+ * Uses env: HELIUS_API_KEY, BUX_TOKEN_MINT, KNUKL_TOKEN_MINT, COLLECTION_*, BUX_TOKEN_DECIMALS, KNUKL_TOKEN_DECIMALS.
+ */
+const path = require("path");
+const bs58 = require("bs58").default || require("bs58");
+
+const ME_BASE = "https://api-mainnet.magiceden.dev/v2";
+const LAMPORTS_PER_SOL = 1e9;
+const HELIUS_RPC = "https://mainnet.helius-rpc.com";
+const TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+const TOKEN_2022_PROGRAM_ID = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
+const SOL_MINT = "So11111111111111111111111111111111111111112";
+const PRICES_CACHE_MS = 60 * 1000;
+
+let pricesCache = { data: null, ts: 0 };
+
+function getCollectionsConfig() {
+  let list;
+  try {
+    list = require(path.join(__dirname, "..", "collections-config.cjs"));
+  } catch (e) {
+    list = [{ slug: "mutant_apes", name: "Xperimental Mutant Apes", group: "Other" }];
+  }
+  return list.map((c) => {
+    const envKey = "COLLECTION_" + (c.slug || "").toUpperCase().replace(/-/g, "_");
+    const mint = process.env[envKey] || c.collectionMint || "";
+    return { ...c, collectionMint: mint };
+  });
+}
+
+function formatTokenAmount(n) {
+  if (n >= 1e9) return (n / 1e9).toFixed(2) + "B";
+  if (n >= 1e6) return (n / 1e6).toFixed(2) + "M";
+  if (n >= 1e3) return (n / 1e3).toFixed(2) + "K";
+  if (n >= 1) return n.toFixed(2);
+  return n.toFixed(4);
+}
+
+function decodeTokenAccountFull(dataBase64) {
+  if (!dataBase64) return null;
+  try {
+    const buf = Buffer.from(dataBase64, "base64");
+    if (buf.length < 72) return null;
+    const owner = bs58.encode(buf.slice(32, 64));
+    const amount = buf.readBigUInt64LE(64);
+    return { owner, amount: Number(amount) };
+  } catch (e) {
+    return null;
+  }
+}
+
+async function fetchJson(u) {
+  const res = await fetch(u, { headers: { Accept: "application/json" } });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+async function getCollectionData(col) {
+  const out = {
+    symbol: col.slug,
+    name: col.name,
+    description: null,
+    image: null,
+    animationUrl: null,
+    supply: null,
+    listedCount: null,
+    floorPrice: null,
+    floorPriceSol: null,
+    volumeAll: null,
+    volumeAllSol: null,
+    avgPrice24hr: null,
+    avgPrice24hrSol: null,
+    marketplaceUrl: `https://magiceden.io/marketplace/${col.slug}`,
+    group: col.group || null,
+  };
+  try {
+    const stats = await fetchJson(`${ME_BASE}/collections/${col.slug}/stats`);
+    if (stats) {
+      out.listedCount = stats.listedCount ?? null;
+      out.floorPrice = stats.floorPrice ?? null;
+      const fp = out.floorPrice;
+      const floorSol = fp != null ? (fp >= 1000 ? fp / LAMPORTS_PER_SOL : Number(fp)) : null;
+      out.floorPriceSol = floorSol != null && !isNaN(floorSol) ? floorSol.toFixed(4) : null;
+      out.volumeAll = stats.volumeAll ?? null;
+      out.volumeAllSol = out.volumeAll != null ? (out.volumeAll / LAMPORTS_PER_SOL).toFixed(2) : null;
+      out.avgPrice24hr = stats.avgPrice24hr ?? null;
+      out.avgPrice24hrSol = out.avgPrice24hr != null ? (out.avgPrice24hr / LAMPORTS_PER_SOL).toFixed(4) : null;
+    }
+  } catch (e) {}
+  try {
+    const meta = await fetchJson(`${ME_BASE}/collections/${col.slug}`);
+    if (meta) {
+      if (meta.name) out.name = meta.name;
+      if (meta.description) out.description = meta.description;
+      if (meta.image || meta.imageURI) out.image = meta.image || meta.imageURI;
+      if (meta.animation_url || meta.animationUrl) out.animationUrl = meta.animation_url || meta.animationUrl;
+      if (meta.totalSupply != null) out.supply = meta.totalSupply;
+    }
+  } catch (e) {}
+  return out;
+}
+
+async function getCollections() {
+  const COLLECTIONS = getCollectionsConfig();
+  const results = await Promise.all(COLLECTIONS.map(getCollectionData));
+  return { collections: results };
+}
+
+async function getPrices() {
+  const now = Date.now();
+  if (pricesCache.data && now - pricesCache.ts < PRICES_CACHE_MS) return pricesCache.data;
+  const BUX_TOKEN_MINT = process.env.BUX_TOKEN_MINT || "";
+  const KNUKL_TOKEN_MINT = process.env.KNUKL_TOKEN_MINT || "";
+  const out = { solUsd: null, buxUsd: null, knuklUsd: null };
+  const tokenIds = [BUX_TOKEN_MINT, KNUKL_TOKEN_MINT].filter(Boolean);
+  const ids = [SOL_MINT, ...tokenIds].join(",");
+  try {
+    const r = await fetch("https://api.jup.ag/price/v3?ids=" + encodeURIComponent(ids), {
+      headers: { Accept: "application/json" },
+    });
+    const data = r.ok ? await r.json() : null;
+    const d = data?.data || data || {};
+    const sol = d[SOL_MINT];
+    if (sol?.price != null) out.solUsd = Number(sol.price);
+    if (sol?.usdPrice != null) out.solUsd = Number(sol.usdPrice);
+    if (BUX_TOKEN_MINT && d[BUX_TOKEN_MINT]) {
+      const p = d[BUX_TOKEN_MINT].price ?? d[BUX_TOKEN_MINT].usdPrice;
+      if (p != null) out.buxUsd = Number(p);
+    }
+    if (KNUKL_TOKEN_MINT && d[KNUKL_TOKEN_MINT]) {
+      const p = d[KNUKL_TOKEN_MINT].price ?? d[KNUKL_TOKEN_MINT].usdPrice;
+      if (p != null) out.knuklUsd = Number(p);
+    }
+  } catch (e) {}
+  if (out.solUsd == null || Number.isNaN(out.solUsd)) {
+    try {
+      const cg = await fetch(
+        "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd",
+        { headers: { Accept: "application/json" } }
+      );
+      const cgData = cg.ok ? await cg.json() : null;
+      const usd = cgData?.solana?.usd;
+      if (usd != null && !Number.isNaN(Number(usd))) out.solUsd = Number(usd);
+    } catch (e) {}
+  }
+  pricesCache = { data: out, ts: now };
+  return out;
+}
+
+async function getHolders(queryGroup) {
+  const HELIUS_API_KEY = process.env.HELIUS_API_KEY || "";
+  const BUX_TOKEN_MINT = process.env.BUX_TOKEN_MINT || "";
+  const KNUKL_TOKEN_MINT = process.env.KNUKL_TOKEN_MINT || "";
+  const BUX_TOKEN_DECIMALS = parseInt(process.env.BUX_TOKEN_DECIMALS || process.env.TOKEN_DECIMALS || "9", 10);
+  const KNUKL_TOKEN_DECIMALS = parseInt(process.env.KNUKL_TOKEN_DECIMALS || process.env.TOKEN_DECIMALS || "8", 10);
+  const COLLECTIONS = getCollectionsConfig();
+  const group = (queryGroup || "KBDS").toUpperCase();
+  const byGroup = COLLECTIONS.filter((c) => (c.group || "").toUpperCase() === group);
+  const HOLDER_EXCLUDED_SLUGS = ["kbds_rmx", "grim_sweepers"];
+  const collectionsWithMint = byGroup.filter(
+    (c) => c.collectionMint && !HOLDER_EXCLUDED_SLUGS.includes(c.slug)
+  );
+  const tokenMint = group === "BUXDAO" ? BUX_TOKEN_MINT : KNUKL_TOKEN_MINT;
+  const tokenDecimals = group === "BUXDAO" ? BUX_TOKEN_DECIMALS : KNUKL_TOKEN_DECIMALS;
+  const hasToken = tokenMint && HELIUS_API_KEY;
+  const hasNfts = HELIUS_API_KEY && collectionsWithMint.length > 0;
+  const holderMap = new Map();
+  function getOrCreate(wallet) {
+    if (!holderMap.has(wallet)) {
+      holderMap.set(wallet, {
+        wallet,
+        tokenBalance: 0,
+        tokenBalanceFormatted: "0",
+        totalNfts: 0,
+        collectionCounts: {},
+      });
+    }
+    return holderMap.get(wallet);
+  }
+  if (hasToken) {
+    const tokenProgramIds = [
+      [TOKEN_PROGRAM_ID, "Token"],
+      [TOKEN_2022_PROGRAM_ID, "Token-2022"],
+    ];
+    for (const [programId] of tokenProgramIds) {
+      try {
+        const gpaRes = await fetch(HELIUS_RPC + "/?api-key=" + encodeURIComponent(HELIUS_API_KEY), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: "1",
+            method: "getProgramAccounts",
+            params: [
+              programId,
+              {
+                encoding: "base64",
+                commitment: "confirmed",
+                filters: [
+                  { dataSize: 165 },
+                  { memcmp: { offset: 0, bytes: tokenMint } },
+                ],
+              },
+            ],
+          }),
+        });
+        const gpa = await gpaRes.json();
+        if (gpa?.error) continue;
+        const rawResult = gpa?.result;
+        const accounts = Array.isArray(rawResult) ? rawResult : rawResult?.value ?? [];
+        for (const item of accounts) {
+          const data = item.account?.data;
+          if (data == null) continue;
+          const raw = typeof data === "string" ? data : Array.isArray(data) ? data[0] : data;
+          const decoded = decodeTokenAccountFull(raw);
+          if (!decoded || decoded.amount === 0) continue;
+          const balance = decoded.amount / Math.pow(10, tokenDecimals);
+          if (!Number.isFinite(balance)) continue;
+          const h = getOrCreate(decoded.owner);
+          h.tokenBalance += balance;
+          h.tokenBalanceFormatted = formatTokenAmount(h.tokenBalance);
+        }
+      } catch (e) {}
+    }
+  }
+  if (hasNfts) {
+    for (const col of collectionsWithMint) {
+      let page = 1;
+      let hasMore = true;
+      while (hasMore) {
+        try {
+          const dasRes = await fetch(HELIUS_RPC + "/?api-key=" + encodeURIComponent(HELIUS_API_KEY), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              jsonrpc: "2.0",
+              id: "1",
+              method: "getAssetsByGroup",
+              params: {
+                groupKey: "collection",
+                groupValue: col.collectionMint,
+                page,
+                limit: 1000,
+              },
+            }),
+          });
+          const das = await dasRes.json();
+          const items = das?.result?.items || [];
+          for (const item of items) {
+            const owner = item.ownership?.owner;
+            if (owner) {
+              const h = getOrCreate(owner);
+              const count = (h.collectionCounts[col.slug] || 0) + 1;
+              h.collectionCounts[col.slug] = count;
+              h.totalNfts = (h.totalNfts || 0) + 1;
+            }
+          }
+          hasMore = items.length === 1000;
+          page++;
+          if (page > 50) break;
+        } catch (e) {
+          hasMore = false;
+        }
+      }
+    }
+  }
+  let list = Array.from(holderMap.values()).map((h) => ({
+    wallet: h.wallet,
+    tokenBalance: h.tokenBalance,
+    tokenBalanceFormatted: h.tokenBalanceFormatted,
+    totalNfts: h.totalNfts || 0,
+    collectionCounts: h.collectionCounts || {},
+  }));
+  const totalScore = (h) => (h.tokenBalance || 0) / 1e6 + (h.totalNfts || 0) * 10;
+  list.sort((a, b) => totalScore(b) - totalScore(a));
+  return { holders: list, sort: "total" };
+}
+
+module.exports = {
+  getCollections,
+  getPrices,
+  getHolders,
+  getCollectionsConfig,
+};

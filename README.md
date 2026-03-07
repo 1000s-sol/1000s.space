@@ -1,3 +1,25 @@
+# 1000s
+
+Holder portal — archives, airdrop, casino, holders.
+
+## Deploy to Vercel
+
+1. Import the repo in [Vercel](https://vercel.com); build and output are set in `vercel.json`.
+2. Add **Environment Variables** in the project settings (same as `.env` locally):
+   - `HELIUS_API_KEY` — for collections/holders and token data
+   - `BUX_TOKEN_MINT`, `KNUKL_TOKEN_MINT` — token addresses for holders/prices
+   - `COLLECTION_<SLUG>` — optional collection mint per slug (e.g. `COLLECTION_KBDS_OG`)
+   - Optional: `BUX_TOKEN_DECIMALS`, `KNUKL_TOKEN_DECIMALS` (defaults 9 and 8)
+3. Deploy. The app is served from `dist`; `/api/collections`, `/api/prices`, `/api/holders`, `/api/health` run as serverless functions.
+
+## Local development
+
+- `npm run dev` — Vite dev server (proxies `/api` to local Node server)
+- `npm run api` — run the Node API on port 3001 (optional; use for local API without Vercel)
+- `npm run build` — build for production
+
+---
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
