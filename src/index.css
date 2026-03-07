@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Changa One", system-ui, sans-serif;
+}
+
+:root {
+  --dashboard-bg: #0a0a0c;
+  /* Strong page gradient: top-left lighter + subtle indigo, bottom-right deep */
+  --dashboard-bg-gradient: linear-gradient(145deg, #1c1c28 0%, #14141e 35%, #0c0c12 70%, #060608 100%);
+  --dashboard-bg-glow: radial-gradient(ellipse 80% 50% at 100% 0%, rgba(99, 102, 241, 0.12) 0%, transparent 60%);
+  --dashboard-border: #2a2a32;
+  --dashboard-border-light: #3a3a44;
+  --dashboard-accent: #6366f1;
+  --dashboard-accent-end: #8b5cf6;
+  --dashboard-accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+  --dashboard-surface: #121216;
+  /* Sidebar: clear top-to-bottom gradient */
+  --dashboard-surface-gradient: linear-gradient(180deg, #1e1e28 0%, #16161e 30%, #101016 70%, #0a0a0e 100%);
+  /* Card: obvious diagonal light → dark */
+  --dashboard-card: linear-gradient(145deg, #252530 0%, #1a1a22 40%, #0f0f14 100%);
+  --dashboard-text: #f0f0f2;
+  --dashboard-muted: #9ca3af;
+  --dashboard-glow: rgba(99, 102, 241, 0.2);
+}
+
+html {
+  height: 100%;
+  font-size: 18px;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--dashboard-bg);
+  background-image: var(--dashboard-bg-glow), var(--dashboard-bg-gradient);
+  background-attachment: fixed;
+  color: var(--dashboard-text);
+  font-family: var(--font-sans);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
