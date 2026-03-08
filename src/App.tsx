@@ -5,6 +5,7 @@ import { CasinoSection } from "./components/CasinoSection";
 import { ArchivesSection } from "./components/ArchivesSection";
 import { HoldersSection } from "./components/HoldersSection";
 import { AirdropSection } from "./components/AirdropSection";
+import { HomeSection } from "./components/HomeSection";
 
 type MenuId = "home" | "airdrop" | "casino" | "archives" | "holders" | "poker" | "spades" | "team" | "roadmap";
 
@@ -68,6 +69,10 @@ function App() {
           {MENU_TITLES[activeMenu]}
         </h1>
         <HoldersSection />
+      </div>
+    ) : activeMenu === "home" ? (
+      <div className="relative w-full max-w-4xl min-h-full flex flex-col">
+        <HomeSection onClaimClick={() => setActiveMenu("airdrop")} />
       </div>
     ) : (
       <div className="max-w-2xl rounded-2xl border-2 border-[var(--dashboard-border)] p-6 shadow-[inset_0_1px_0_var(--dashboard-border-light),0_4px_24px_rgba(0,0,0,0.25)]" style={{ background: 'var(--dashboard-card)' }}>

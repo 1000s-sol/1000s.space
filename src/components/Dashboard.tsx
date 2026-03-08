@@ -91,7 +91,7 @@ export function Dashboard({
 
   return (
     <WalletProvider walletConnected={walletConnected} setWalletConnected={setWalletConnected}>
-    <div className="flex flex-col h-screen overflow-hidden min-[840px]:flex-row">
+    <div className="flex flex-col h-screen min-h-[100dvh] overflow-hidden min-[840px]:flex-row">
       {/* Landscape: sidebar — fixed height, no scroll */}
       <aside className="hidden min-[840px]:flex w-64 flex-shrink-0 flex-col h-full border-r-2 border-[var(--dashboard-border)] shadow-[4px_0_24px_rgba(0,0,0,0.4)]" style={{ background: 'var(--dashboard-surface-gradient)' }}>
         <div className="p-5 border-b-2 border-[var(--dashboard-border)] bg-gradient-to-b from-[#2a2a38] via-[#1e1e28] to-transparent flex-shrink-0">
@@ -102,9 +102,11 @@ export function Dashboard({
         </div>
       </aside>
 
-      {/* Main content — only this area scrolls */}
+      {/* Main content — only this area scrolls. Nav stays pinned to viewport bottom (flex-1 here). */}
       <main className="flex-1 flex flex-col min-h-0 min-[840px]:min-h-0">
-        <div className="flex-1 flex flex-col min-h-0 overflow-auto p-5 min-[840px]:p-8">{children}</div>
+        <div className="flex-1 flex flex-col min-h-0 overflow-auto p-4 pt-[max(1rem,env(safe-area-inset-top))] min-[840px]:p-8 pb-5 min-[840px]:pb-8" data-home-content={activeMenu === "home" || undefined}>
+          {children}
+        </div>
 
         {/* Portrait / narrow: bottom dashboard nav — pinned to viewport bottom */}
         <div className="min-[840px]:hidden flex-shrink-0 flex flex-col border-t-2 border-[var(--dashboard-border)] shadow-[0_-4px_20px_rgba(0,0,0,0.3)] safe-area-pb" style={{ background: 'linear-gradient(0deg, #1a1a22 0%, #121218 100%)' }}>
