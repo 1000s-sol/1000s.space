@@ -5,7 +5,6 @@ import "./HomeSection.css";
 const PAIR_COUNT = 10;
 const MIN_DURATION = 6;
 const MAX_DURATION = 14;
-const MIN_DELAY = 0;
 const MAX_DELAY = 4;
 const MIN_SIZE = 16;
 const MAX_SIZE = 26;
