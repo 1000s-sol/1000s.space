@@ -123,7 +123,7 @@ export function Dashboard({
             <img src="/images/1000s-logo.png" alt="1000s" className="h-20 w-auto object-contain object-center min-[840px]:h-24 scale-[1.6]" />
           </div>
         </div>
-        <div className="flex-1 flex flex-col p-4 min-h-0 overflow-hidden border-r border-[var(--dashboard-border)]/50">
+        <div className="flex-1 flex flex-col p-4 min-h-0 overflow-y-auto overflow-x-hidden border-r border-[var(--dashboard-border)]/50">
           {navContent}
         </div>
       </aside>
