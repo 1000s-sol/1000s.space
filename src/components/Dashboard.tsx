@@ -56,9 +56,10 @@ export function Dashboard({
   );
   useEffect(() => {
     const update = () => {
-      setAppHeight(
-        window.visualViewport ? window.visualViewport.height : window.innerHeight
-      );
+      const h =
+        window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      setAppHeight(h);
+      document.documentElement.style.setProperty("--window-height", `${h}px`);
     };
     update();
     window.addEventListener("resize", update);
@@ -75,6 +76,7 @@ export function Dashboard({
         vv.removeEventListener("resize", update);
         vv.removeEventListener("scroll", update);
       }
+      document.documentElement.style.removeProperty("--window-height");
     };
   }, []);
 
@@ -124,6 +126,7 @@ export function Dashboard({
   return (
     <WalletProvider walletConnected={walletConnected} setWalletConnected={setWalletConnected}>
     <div
+      data-dashboard-root
       className="flex flex-col overflow-hidden min-[840px]:flex-row"
       style={{ height: appHeight }}
     >

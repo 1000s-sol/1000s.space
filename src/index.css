@@ -42,16 +42,37 @@ html {
 
 body {
   margin: 0;
+  height: 100%;
   min-height: 100%;
   background: var(--dashboard-bg);
   background-image: var(--dashboard-bg-glow), var(--dashboard-bg-gradient);
   background-attachment: fixed;
   color: var(--dashboard-text);
   font-family: var(--font-sans);
+  overflow: hidden;
+}
+
+/* Lock full page to visible viewport height when --window-height is set (iPad etc) */
+html:has([data-dashboard-root]) {
+  height: var(--window-height, 100%);
+  overflow: hidden;
+}
+
+body:has([data-dashboard-root]) {
+  height: var(--window-height, 100%);
+  min-height: 0;
+  overflow: hidden;
 }
 
 #root {
-  min-height: 100vh;
+  min-height: 0;
+  height: 100%;
+}
+
+#root:has([data-dashboard-root]) {
+  height: var(--window-height, 100%);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .safe-area-pb {
