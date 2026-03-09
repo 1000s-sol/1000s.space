@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Slots · 1000s</title>
+  <script>
+    // Token (knukl | bux) is passed from the main site; read via: window.__SLOTS_TOKEN__ or URL searchParams
+    (function() {
+      var p = new URLSearchParams(window.location.search);
+      window.__SLOTS_TOKEN__ = (p.get('token') === 'bux') ? 'bux' : 'knukl';
+    })();
+  </script>
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100vh; background: #0a0a0c; color: #e4e4e7; font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; padding: 1rem; }
@@ -15,7 +22,7 @@
 <body>
   <div class="msg">
     <h1>Slots</h1>
-    <p>Copy the Slots game files from <code>xapes copy/public</code> (slots.html, slots.js, slots.css, slots-mobile.css) and any assets into <code>public/casino/</code>, then update asset paths so they load correctly when served at /casino/slots.html.</p>
+    <p>Copy the Slots game files from <code>xapes copy/public</code> (slots.html, slots.js, slots.css, slots-mobile.css) and any assets into <code>public/casino/</code>. The main site passes <code>?token=knukl</code> or <code>?token=bux</code>; the game can read it from <code>window.__SLOTS_TOKEN__</code> or <code>URLSearchParams</code>.</p>
   </div>
 </body>
 </html>
