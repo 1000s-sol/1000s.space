@@ -46,23 +46,34 @@ export function Dashboard({
   const [discordConnected, setDiscordConnected] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
 
-  // iPad Safari (and others) often ignore svh/dvh; use actual visible height so sidebar buttons stay visible
+  // Use visual viewport height so we fit in the visible area when browser bar (e.g. at top) is present; no sidebar scroll
   const [appHeight, setAppHeight] = useState(() =>
-    typeof window !== "undefined" ? window.innerHeight : 100
+    typeof window !== "undefined" && window.visualViewport
+      ? window.visualViewport.height
+      : typeof window !== "undefined"
+        ? window.innerHeight
+        : 100
   );
   useEffect(() => {
-    const update = () => setAppHeight(window.innerHeight);
+    const update = () => {
+      setAppHeight(
+        window.visualViewport ? window.visualViewport.height : window.innerHeight
+      );
+    };
     update();
     window.addEventListener("resize", update);
     window.addEventListener("orientationchange", update);
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", update);
+    const vv = window.visualViewport;
+    if (vv) {
+      vv.addEventListener("resize", update);
+      vv.addEventListener("scroll", update);
     }
     return () => {
       window.removeEventListener("resize", update);
       window.removeEventListener("orientationchange", update);
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener("resize", update);
+      if (vv) {
+        vv.removeEventListener("resize", update);
+        vv.removeEventListener("scroll", update);
       }
     };
   }, []);
@@ -123,7 +134,7 @@ export function Dashboard({
             <img src="/images/1000s-logo.png" alt="1000s" className="h-20 w-auto object-contain object-center min-[840px]:h-24 scale-[1.6]" />
           </div>
         </div>
-        <div className="flex-1 flex flex-col p-4 min-h-0 overflow-y-auto overflow-x-hidden border-r border-[var(--dashboard-border)]/50">
+        <div className="flex-1 flex flex-col p-4 min-h-0 overflow-hidden border-r border-[var(--dashboard-border)]/50">
           {navContent}
         </div>
       </aside>
