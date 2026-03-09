@@ -81,43 +81,43 @@ export function Dashboard({
   }, []);
 
   const sidebarNav = (
-      <nav className="flex flex-col gap-1" aria-label="Main">
+      <nav className="flex flex-col gap-1.5" aria-label="Main">
         {MENU_ITEMS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             type="button"
             onClick={() => onMenuChange(id)}
             className={`
-              flex items-center gap-2 text-left px-3 py-2.5 rounded-xl text-sm font-medium transition-all border
+              flex items-center gap-3 text-left px-5 py-3.5 rounded-xl text-base font-medium transition-all border
               ${activeMenu === id
                 ? "text-white border-indigo-500/60 shadow-[0_0_24px_rgba(99,102,241,0.25)]"
                 : "text-[var(--dashboard-muted)] border-transparent hover:bg-white/5 hover:text-[var(--dashboard-text)] hover:border-[var(--dashboard-border-light)]"}
             `}
             style={activeMenu === id ? { background: 'linear-gradient(135deg, rgba(99,102,241,0.35) 0%, rgba(139,92,246,0.35) 50%, rgba(168,85,247,0.25) 100%)' } : undefined}
           >
-            <Icon className="flex-shrink-0 size-4" aria-hidden />
+            <Icon className="flex-shrink-0 size-5" aria-hidden />
             {label}
           </button>
         ))}
       </nav>
     );
   const sidebarButtons = (
-      <div className="flex flex-col gap-2 border-t-2 border-[var(--dashboard-border)] pt-3 flex-shrink-0">
+      <div className="flex flex-col gap-3 border-t-2 border-[var(--dashboard-border)] pt-6 flex-shrink-0">
         <button
           type="button"
           onClick={() => setWalletConnected((c) => !c)}
-          className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl text-sm font-medium border-2 border-[var(--dashboard-border)] bg-[var(--dashboard-surface)] text-[var(--dashboard-text)] hover:border-[var(--dashboard-accent)]/60 hover:shadow-[0_0_16px_var(--dashboard-glow)] transition-all"
+          className="flex items-center justify-center gap-3 w-full px-5 py-3.5 rounded-xl text-base font-medium border-2 border-[var(--dashboard-border)] bg-[var(--dashboard-surface)] text-[var(--dashboard-text)] hover:border-[var(--dashboard-accent)]/60 hover:shadow-[0_0_16px_var(--dashboard-glow)] transition-all"
         >
-          <Wallet className="flex-shrink-0 size-4" aria-hidden />
+          <Wallet className="flex-shrink-0 size-5" aria-hidden />
           {walletConnected ? "Disconnect" : "Connect"}
         </button>
         <button
           type="button"
           onClick={() => setDiscordConnected((c) => !c)}
-          className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl text-sm font-medium border-2 border-[#6b7cff]/80 text-white hover:border-[#7c8dff] transition-all"
+          className="flex items-center justify-center gap-3 w-full px-5 py-3.5 rounded-xl text-base font-medium border-2 border-[#6b7cff]/80 text-white hover:border-[#7c8dff] transition-all"
           style={{ background: 'linear-gradient(135deg, #5865F2 0%, #7c3aed 50%, #6d28d9 100%)' }}
         >
-          <DiscordIcon className="flex-shrink-0 size-4" />
+          <DiscordIcon className="flex-shrink-0 size-5" />
           {discordConnected ? "Logout" : "Login"}
         </button>
       </div>
@@ -132,15 +132,15 @@ export function Dashboard({
     >
       {/* Landscape: sidebar — fixed height, no scroll. 100svh = visible viewport when browser bar (e.g. top) is shown. */}
       <aside className="hidden min-[840px]:flex w-64 flex-shrink-0 flex-col h-full border-r-2 border-[var(--dashboard-border)] shadow-[4px_0_24px_rgba(0,0,0,0.4)]" style={{ background: 'var(--dashboard-surface-gradient)' }}>
-        <div className="px-3 pt-3 pb-0.5 border-b-2 border-[var(--dashboard-border)] bg-gradient-to-b from-[#2a2a38] via-[#1e1e28] to-transparent flex-shrink-0">
-          <div className="flex items-center justify-center overflow-hidden h-10 min-[840px]:h-11">
-            <img src="/images/1000s-logo.png" alt="1000s" className="h-16 w-auto object-contain object-center min-[840px]:h-20 scale-[1.6]" />
+        <div className="px-5 pt-5 pb-1 border-b-2 border-[var(--dashboard-border)] bg-gradient-to-b from-[#2a2a38] via-[#1e1e28] to-transparent flex-shrink-0">
+          <div className="flex items-center justify-center overflow-hidden h-12 min-[840px]:h-14">
+            <img src="/images/1000s-logo.png" alt="1000s" className="h-20 w-auto object-contain object-center min-[840px]:h-24 scale-[1.6]" />
           </div>
         </div>
-        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 border-r border-[var(--dashboard-border)]/50">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 border-r border-[var(--dashboard-border)]/50">
           {sidebarNav}
         </div>
-        <div className="p-3 border-r border-[var(--dashboard-border)]/50 flex-shrink-0">
+        <div className="p-4 border-r border-[var(--dashboard-border)]/50 flex-shrink-0">
           {sidebarButtons}
         </div>
       </aside>
