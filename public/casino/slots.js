@@ -327,6 +327,9 @@ async function setupWalletConnection() {
             updateDisplay();
             updateButtonStates();
         });
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'CONNECT_WALLET' && connectBtn) connectBtn.click();
+        });
     } else {
         connectBtn.textContent = 'Install Phantom';
         connectBtn.onclick = () => {

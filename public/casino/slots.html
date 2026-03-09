@@ -6,11 +6,14 @@
     <meta name="description" content="1000s Slots">
     <title>Slots · 1000s</title>
     <script>
-        (function(){var p=new URLSearchParams(window.location.search);window.__SLOTS_TOKEN__=(p.get('token')==='bux')?'bux':'knukl';})();
+        (function(){var p=new URLSearchParams(window.location.search);window.__SLOTS_TOKEN__=(p.get('token')==='bux')?'bux':'knukl';if(window.self!==window.top)document.documentElement.classList.add('slots-embedded');})();
     </script>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="slots.css?v=4">
     <link rel="stylesheet" href="slots-mobile.css?v=2">
+    <style>
+        html.slots-embedded .navbar { display: none !important; }
+    </style>
     <style id="slots-mobile-inline">
 /* Inline so it always applies: no gap below buttons, full width */
 @media (max-width:768px){

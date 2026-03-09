@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
@@ -20,6 +20,15 @@ export function GamePage() {
   );
   const config = gameId && gameId in GAME_CONFIG ? GAME_CONFIG[gameId as GameId] : null;
   const isSlots = config && gameId === "slots";
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const handleConnectWallet = () => {
+    try {
+      iframeRef.current?.contentWindow?.postMessage({ type: "CONNECT_WALLET" }, "*");
+    } catch {
+      // cross-origin or not loaded
+    }
+  };
 
   useEffect(() => {
     const t = searchParams.get("token");
@@ -92,11 +101,22 @@ export function GamePage() {
             <span className="text-base font-semibold text-white">{config.title}</span>
           )}
         </div>
-        <div className="w-[5.5rem] flex-shrink-0" aria-hidden />
+        {isSlots ? (
+            <button
+              type="button"
+              onClick={handleConnectWallet}
+              className="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold border-2 border-[var(--dashboard-accent)] bg-[var(--dashboard-accent)]/20 text-white hover:bg-[var(--dashboard-accent)]/30 transition-colors"
+            >
+              Connect Wallet
+            </button>
+          ) : (
+            <div className="w-[5.5rem] flex-shrink-0" aria-hidden />
+          )}
       </header>
 
       {iframeSrc ? (
         <iframe
+          ref={iframeRef}
           key={iframeSrc}
           title={config.title}
           src={iframeSrc}
