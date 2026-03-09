@@ -125,7 +125,7 @@ export function Dashboard({
     <WalletProvider walletConnected={walletConnected} setWalletConnected={setWalletConnected}>
     <div
       className="flex flex-col overflow-hidden min-[840px]:flex-row"
-      style={{ height: appHeight, minHeight: "100dvh" }}
+      style={{ height: appHeight }}
     >
       {/* Landscape: sidebar — fixed height, no scroll. 100svh = visible viewport when browser bar (e.g. top) is shown. */}
       <aside className="hidden min-[840px]:flex w-64 flex-shrink-0 flex-col h-full border-r-2 border-[var(--dashboard-border)] shadow-[4px_0_24px_rgba(0,0,0,0.4)]" style={{ background: 'var(--dashboard-surface-gradient)' }}>
