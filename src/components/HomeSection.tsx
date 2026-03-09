@@ -197,9 +197,9 @@ export function HomeSection({ onClaimClick }: HomeSectionProps) {
         })}
       </div>
 
-      <header className="relative z-10 w-full flex flex-col items-center gap-1 min-[840px]:gap-2 pt-0 min-[840px]:pt-0 px-2 min-[840px]:px-4 flex-shrink-0">
+      <header className="relative z-10 w-full flex flex-col items-center gap-1 min-[640px]:gap-2 pt-0 min-[640px]:pt-0 px-2 min-[640px]:px-4 flex-shrink-0">
         {/* Row 1: [image, title, image]; Row 2: tagline — images closer to title on mobile (gap-1.5) */}
-        <div className="flex flex-row items-center justify-center gap-3 min-[840px]:gap-6 w-full min-[840px]:w-auto">
+        <div className="flex flex-row items-center justify-center gap-3 min-[640px]:gap-6 w-full min-[640px]:w-auto">
           <div
             className="aspect-square rounded-full overflow-hidden flex-shrink-0"
             style={{
@@ -211,7 +211,7 @@ export function HomeSection({ onClaimClick }: HomeSectionProps) {
           >
             <img src={ARCHIVE_ARTWORK[2]} alt="" className="w-full h-full object-cover" loading="eager" decoding="async" />
           </div>
-          <div className="flex-shrink-0 py-5 min-[840px]:py-6">
+          <div className="flex-shrink-0 py-5 min-[640px]:py-6">
             <div
               className="flex items-center justify-center overflow-hidden"
               style={{ height: "clamp(56px, 14vw, 140px)", width: "clamp(140px, 34vw, 340px)" }}
@@ -257,19 +257,19 @@ export function HomeSection({ onClaimClick }: HomeSectionProps) {
         </p>
       </header>
 
-      <section className="relative z-10 w-full flex-1 flex flex-col justify-center min-[840px]:justify-start min-[840px]:flex-initial px-2 sm:px-0 py-6 min-[840px]:py-8 home-section-cards-area min-h-0 min-[840px]:min-h-[calc(100vh-12rem)]">
-        <div className="grid grid-cols-2 min-[840px]:grid-cols-2 gap-6 min-[840px]:gap-8 w-full max-w-5xl mx-auto items-center">
-          <div className="col-span-2 min-[840px]:col-span-1 home-section-text-card rounded-2xl border border-[var(--dashboard-border)] p-4 min-[840px]:p-6 text-left shadow-[0_4px_24px_rgba(0,0,0,0.35)] flex flex-col justify-center">
+      <section className="relative z-10 w-full flex-1 flex flex-col justify-center min-[640px]:justify-start min-[640px]:flex-initial px-2 sm:px-0 py-6 min-[640px]:py-8 home-section-cards-area min-h-0 min-[640px]:min-h-[calc(100vh-12rem)]">
+        <div className="grid grid-cols-2 min-[640px]:grid-cols-2 gap-6 min-[640px]:gap-8 w-full max-w-5xl mx-auto items-center">
+          <div className="col-span-2 min-[640px]:col-span-1 home-section-text-card rounded-2xl border border-[var(--dashboard-border)] p-4 min-[640px]:p-6 text-left shadow-[0_4px_24px_rgba(0,0,0,0.35)] flex flex-col justify-center">
             <div className="flex gap-3">
               <Info className="flex-shrink-0 size-5 mt-0.5 text-[var(--dashboard-accent)]" aria-hidden />
-              <p className="text-[var(--dashboard-text)] text-[15px] min-[840px]:text-base leading-relaxed">
+              <p className="text-[var(--dashboard-text)] text-[15px] min-[640px]:text-base leading-relaxed">
                 1000s is a web3 art and gaming community. Holders of our digital collectibles can earn daily rewards through passive holding, community engagement and by playing on our custom built gaming platforms.
               </p>
             </div>
           </div>
-          <div className="flex items-center justify-center min-h-[140px] min-[840px]:min-h-[260px]" aria-hidden>
+          <div className="flex items-center justify-center min-h-[140px] min-[640px]:min-h-[260px]" aria-hidden>
             <div
-              className="w-full max-w-[140px] min-[840px]:max-w-[280px] aspect-square rounded-full overflow-hidden"
+              className="w-full max-w-[140px] min-[640px]:max-w-[280px] aspect-square rounded-full overflow-hidden"
               style={{
                 WebkitMaskImage: "radial-gradient(ellipse 70% 70% at 50% 50%, black 35%, transparent 75%)",
                 maskImage: "radial-gradient(ellipse 70% 70% at 50% 50%, black 35%, transparent 75%)",
@@ -278,9 +278,9 @@ export function HomeSection({ onClaimClick }: HomeSectionProps) {
               <img src={ARCHIVE_ARTWORK[0]} alt="" className="w-full h-full object-cover" loading="eager" decoding="async" />
             </div>
           </div>
-          <div className="flex items-center justify-center min-h-[140px] min-[840px]:min-h-[260px]" aria-hidden>
+          <div className="flex items-center justify-center min-h-[140px] min-[640px]:min-h-[260px]" aria-hidden>
             <div
-              className="w-full max-w-[140px] min-[840px]:max-w-[280px] aspect-square rounded-full overflow-hidden"
+              className="w-full max-w-[140px] min-[640px]:max-w-[280px] aspect-square rounded-full overflow-hidden"
               style={{
                 WebkitMaskImage: "radial-gradient(ellipse 70% 70% at 50% 50%, black 35%, transparent 75%)",
                 maskImage: "radial-gradient(ellipse 70% 70% at 50% 50%, black 35%, transparent 75%)",
@@ -289,8 +289,8 @@ export function HomeSection({ onClaimClick }: HomeSectionProps) {
               <img src={ARCHIVE_ARTWORK[1]} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
             </div>
           </div>
-          <div className="col-span-2 min-[840px]:col-span-1 home-section-text-card rounded-2xl border border-[var(--dashboard-border)] p-4 min-[840px]:p-6 text-left shadow-[0_4px_24px_rgba(0,0,0,0.35)] flex flex-col justify-center">
-            <p className="text-amber-400/95 text-[15px] min-[840px]:text-base leading-relaxed">
+          <div className="col-span-2 min-[640px]:col-span-1 home-section-text-card rounded-2xl border border-[var(--dashboard-border)] p-4 min-[640px]:p-6 text-left shadow-[0_4px_24px_rgba(0,0,0,0.35)] flex flex-col justify-center">
+            <p className="text-amber-400/95 text-[15px] min-[640px]:text-base leading-relaxed">
               Our flagship art collection and token launch is scheduled for Q4 2026. Find out how you can secure and maximise your FREE token allocation today.
             </p>
             <button

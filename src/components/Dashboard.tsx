@@ -127,11 +127,11 @@ export function Dashboard({
     <WalletProvider walletConnected={walletConnected} setWalletConnected={setWalletConnected}>
     <div
       data-dashboard-root
-      className="flex flex-col overflow-hidden min-[640px]:flex-row"
+      className="flex flex-col overflow-hidden min-[840px]:flex-row"
       style={{ height: appHeight }}
     >
       {/* Landscape: sidebar — fixed height, no scroll. 100svh = visible viewport when browser bar (e.g. top) is shown. */}
-      <aside className="hidden min-[640px]:flex w-64 flex-shrink-0 flex-col h-full border-r-2 border-[var(--dashboard-border)] shadow-[4px_0_24px_rgba(0,0,0,0.4)]" style={{ background: 'var(--dashboard-surface-gradient)' }}>
+      <aside className="hidden min-[840px]:flex w-64 flex-shrink-0 flex-col h-full border-r-2 border-[var(--dashboard-border)] shadow-[4px_0_24px_rgba(0,0,0,0.4)]" style={{ background: 'var(--dashboard-surface-gradient)' }}>
         <div className="px-5 pt-5 pb-1 border-b-2 border-[var(--dashboard-border)] bg-gradient-to-b from-[#2a2a38] via-[#1e1e28] to-transparent flex-shrink-0">
           <div className="flex items-center justify-center overflow-hidden h-12 min-[840px]:h-14">
             <img src="/images/1000s-logo.png" alt="1000s" className="h-20 w-auto object-contain object-center min-[840px]:h-24 scale-[1.6]" />
