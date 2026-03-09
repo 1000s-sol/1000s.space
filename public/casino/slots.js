@@ -329,6 +329,7 @@ async function setupWalletConnection() {
         });
         window.addEventListener('message', function(e) {
             if (e.data && e.data.type === 'CONNECT_WALLET' && connectBtn) connectBtn.click();
+            if (e.data && e.data.type === 'TOGGLE_MUSIC' && typeof window.toggleSlotsMusic === 'function') window.toggleSlotsMusic();
         });
     } else {
         connectBtn.textContent = 'Install Phantom';

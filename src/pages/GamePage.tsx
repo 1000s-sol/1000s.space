@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Wallet } from "lucide-react";
 
 type GameId = "slots" | "roulette" | "blackjack";
 type SlotsToken = "knukl" | "bux";
@@ -25,6 +25,14 @@ export function GamePage() {
   const handleConnectWallet = () => {
     try {
       iframeRef.current?.contentWindow?.postMessage({ type: "CONNECT_WALLET" }, "*");
+    } catch {
+      // cross-origin or not loaded
+    }
+  };
+
+  const handleToggleMusic = () => {
+    try {
+      iframeRef.current?.contentWindow?.postMessage({ type: "TOGGLE_MUSIC" }, "*");
     } catch {
       // cross-origin or not loaded
     }
@@ -75,7 +83,7 @@ export function GamePage() {
                 role="tab"
                 aria-selected={slotsToken === "knukl"}
                 onClick={() => handleSlotsTokenChange("knukl")}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   slotsToken === "knukl"
                     ? "bg-[var(--dashboard-accent)] text-white shadow-[0_0_12px_var(--dashboard-glow)]"
                     : "text-[var(--dashboard-muted)] hover:text-white"
@@ -88,7 +96,7 @@ export function GamePage() {
                 role="tab"
                 aria-selected={slotsToken === "bux"}
                 onClick={() => handleSlotsTokenChange("bux")}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   slotsToken === "bux"
                     ? "bg-[var(--dashboard-accent)] text-white shadow-[0_0_12px_var(--dashboard-glow)]"
                     : "text-[var(--dashboard-muted)] hover:text-white"
@@ -102,13 +110,27 @@ export function GamePage() {
           )}
         </div>
         {isSlots ? (
-            <button
-              type="button"
-              onClick={handleConnectWallet}
-              className="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold border-2 border-[var(--dashboard-accent)] bg-[var(--dashboard-accent)]/20 text-white hover:bg-[var(--dashboard-accent)]/30 transition-colors"
-            >
-              Connect Wallet
-            </button>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                type="button"
+                onClick={handleToggleMusic}
+                className="p-2 rounded-lg text-[var(--dashboard-muted)] hover:text-white hover:bg-white/10 transition-colors"
+                title="Toggle music"
+                aria-label="Toggle music on or off"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="size-5" aria-hidden>
+                  <path fillRule="evenodd" clipRule="evenodd" d="M21.6464 2.23699C21.8707 2.42699 22 2.70606 22 3.00001V16C22 18.2091 20.2091 20 18 20C15.7909 20 14 18.2091 14 16C14 13.7909 15.7909 12 18 12C18.7286 12 19.4117 12.1948 20 12.5351V4.18047L10 5.84713V18L9.99999 18.0032C9.99824 20.2109 8.20806 22 6 22C3.79086 22 2 20.2091 2 18C2 15.7909 3.79086 14 6 14C6.72857 14 7.41165 14.1948 8 14.5351V5.00001C8 4.51117 8.35341 4.09398 8.8356 4.01361L20.8356 2.01361C21.1256 1.96529 21.4221 2.04698 21.6464 2.23699ZM20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16ZM6 16C7.10457 16 8 16.8954 8 18C8 19.1046 7.10457 20 6 20C4.89543 20 4 19.1046 4 18C4 16.8954 4.89543 16 6 16Z" fill="currentColor"/>
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={handleConnectWallet}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border-2 border-[var(--dashboard-border)] bg-[var(--dashboard-surface)] text-[var(--dashboard-text)] hover:border-[var(--dashboard-accent)]/60 hover:shadow-[0_0_16px_var(--dashboard-glow)] transition-colors"
+              >
+                <Wallet className="size-5 flex-shrink-0" aria-hidden />
+                Connect
+              </button>
+            </div>
           ) : (
             <div className="w-[5.5rem] flex-shrink-0" aria-hidden />
           )}
