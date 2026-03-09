@@ -13,8 +13,10 @@
     <link rel="stylesheet" href="slots-mobile.css?v=2">
     <style>
         html.slots-embedded .navbar { display: none !important; }
-        html.slots-embedded .slots-page { padding-top: 0 !important; }
-        html.slots-embedded .slot-machine-wrapper { grid-template-rows: auto 1fr auto !important; }
+        html.slots-embedded body,
+        html.slots-embedded .slots-page { padding-top: 0 !important; margin-top: 0 !important; }
+        html.slots-embedded .slots-container { padding-top: 0 !important; }
+        html.slots-embedded .slot-machine-wrapper { grid-template-rows: auto 1fr auto !important; gap: 0 !important; }
     </style>
     <style id="slots-mobile-inline">
 /* Inline so it always applies: no gap below buttons, full width */

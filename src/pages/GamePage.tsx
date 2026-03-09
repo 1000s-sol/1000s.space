@@ -142,7 +142,8 @@ export function GamePage() {
           key={iframeSrc}
           title={config.title}
           src={iframeSrc}
-          className="flex-1 w-full min-h-0 border-0"
+          className="flex-1 w-full min-h-0 border-0 block"
+          style={{ margin: 0, verticalAlign: "top" }}
           allow="fullscreen"
         />
       ) : (
