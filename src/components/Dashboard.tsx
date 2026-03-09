@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Home,
   Gift,
@@ -46,6 +46,27 @@ export function Dashboard({
   const [discordConnected, setDiscordConnected] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
 
+  // iPad Safari (and others) often ignore svh/dvh; use actual visible height so sidebar buttons stay visible
+  const [appHeight, setAppHeight] = useState(() =>
+    typeof window !== "undefined" ? window.innerHeight : 100
+  );
+  useEffect(() => {
+    const update = () => setAppHeight(window.innerHeight);
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", update);
+    }
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", update);
+      }
+    };
+  }, []);
+
   const navContent = (
     <>
       <nav className="flex flex-col gap-1.5" aria-label="Main">
@@ -91,7 +112,10 @@ export function Dashboard({
 
   return (
     <WalletProvider walletConnected={walletConnected} setWalletConnected={setWalletConnected}>
-    <div className="flex flex-col h-[100svh] min-h-[100dvh] overflow-hidden min-[840px]:flex-row">
+    <div
+      className="flex flex-col overflow-hidden min-[840px]:flex-row"
+      style={{ height: appHeight, minHeight: "100dvh" }}
+    >
       {/* Landscape: sidebar — fixed height, no scroll. 100svh = visible viewport when browser bar (e.g. top) is shown. */}
       <aside className="hidden min-[840px]:flex w-64 flex-shrink-0 flex-col h-full border-r-2 border-[var(--dashboard-border)] shadow-[4px_0_24px_rgba(0,0,0,0.4)]" style={{ background: 'var(--dashboard-surface-gradient)' }}>
         <div className="px-5 pt-5 pb-1 border-b-2 border-[var(--dashboard-border)] bg-gradient-to-b from-[#2a2a38] via-[#1e1e28] to-transparent flex-shrink-0">
