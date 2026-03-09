@@ -197,7 +197,7 @@ export function HomeSection({ onClaimClick }: HomeSectionProps) {
         })}
       </div>
 
-      <header className="relative z-10 w-full flex flex-col items-center gap-1 min-[840px]:gap-2 pt-4 min-[840px]:pt-10 px-2 min-[840px]:px-4 flex-shrink-0">
+      <header className="relative z-10 w-full flex flex-col items-center gap-1 min-[840px]:gap-2 pt-0 min-[840px]:pt-0 px-2 min-[840px]:px-4 flex-shrink-0">
         {/* Row 1: [image, title, image]; Row 2: tagline — images closer to title on mobile (gap-1.5) */}
         <div className="flex flex-row items-center justify-center gap-3 min-[840px]:gap-6 w-full min-[840px]:w-auto">
           <div
@@ -211,15 +211,23 @@ export function HomeSection({ onClaimClick }: HomeSectionProps) {
           >
             <img src={ARCHIVE_ARTWORK[2]} alt="" className="w-full h-full object-cover" loading="eager" decoding="async" />
           </div>
-          <h1
-            className="font-semibold text-white tracking-tight leading-none select-none flex-shrink-0"
-            style={{
-              fontSize: "clamp(3.25rem, 12vw, 6rem)",
-              textShadow: "0 0 32px rgba(99,102,241,0.2), 0 2px 16px rgba(0,0,0,0.4)",
-            }}
-          >
-            1000s
-          </h1>
+          <div className="flex-shrink-0 py-5 min-[840px]:py-6">
+            <div
+              className="flex items-center justify-center overflow-hidden"
+              style={{ height: "clamp(56px, 14vw, 140px)", width: "clamp(140px, 34vw, 340px)" }}
+            >
+              <img
+                src="/images/1000s-logo.png"
+                alt="1000s"
+                className="select-none object-contain max-w-none"
+                style={{
+                  height: "clamp(88px, 22vw, 220px)",
+                  width: "auto",
+                  transform: "scale(1.5)",
+                }}
+              />
+            </div>
+          </div>
           <div
             className="aspect-square rounded-full overflow-hidden flex-shrink-0"
             style={{
@@ -233,15 +241,24 @@ export function HomeSection({ onClaimClick }: HomeSectionProps) {
           </div>
         </div>
         <p
-          className="text-[var(--dashboard-muted)] font-normal tracking-wide text-sm min-[840px]:text-base text-center"
-          style={{ textShadow: "0 1px 8px rgba(0,0,0,0.4)" }}
+          className="tracking-wide text-center font-normal"
+          style={{
+            fontFamily: "var(--font-bitcount), system-ui, sans-serif",
+            fontSize: "clamp(1.125rem, 3.5vw, 1.5rem)",
+            color: "transparent",
+            background: "#9ca3af",
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))",
+            WebkitTextFillColor: "transparent",
+          }}
         >
           &ldquo;where thousands become millions&rdquo;
         </p>
       </header>
 
-      <section className="relative z-10 w-full flex-1 flex flex-col justify-center min-[840px]:justify-start min-[840px]:flex-initial px-2 sm:px-0 py-4 min-[840px]:py-8 home-section-cards-area min-h-0">
-        <div className="grid grid-cols-2 min-[840px]:grid-cols-2 gap-4 min-[840px]:gap-6 w-full max-w-5xl mx-auto items-start">
+      <section className="relative z-10 w-full flex-1 flex flex-col justify-center min-[840px]:justify-start min-[840px]:flex-initial px-2 sm:px-0 py-6 min-[840px]:py-8 home-section-cards-area min-h-0 min-[840px]:min-h-[calc(100vh-12rem)]">
+        <div className="grid grid-cols-2 min-[840px]:grid-cols-2 gap-6 min-[840px]:gap-8 w-full max-w-5xl mx-auto items-center">
           <div className="col-span-2 min-[840px]:col-span-1 home-section-text-card rounded-2xl border border-[var(--dashboard-border)] p-4 min-[840px]:p-6 text-left shadow-[0_4px_24px_rgba(0,0,0,0.35)] flex flex-col justify-center">
             <div className="flex gap-3">
               <Info className="flex-shrink-0 size-5 mt-0.5 text-[var(--dashboard-accent)]" aria-hidden />

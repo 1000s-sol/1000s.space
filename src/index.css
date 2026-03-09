@@ -1,11 +1,21 @@
 @import "tailwindcss";
 
+/* Bitcount Prop Double Ink – variable font (project-local) */
+@font-face {
+  font-family: "Bitcount Prop Double Ink";
+  src: url("/fonts/BitcountPropDoubleInk-Variable.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   --font-sans: "Changa One", system-ui, sans-serif;
   --color-hero-card: rgba(26, 26, 34, 0.5);
 }
 
 :root {
+  --font-bitcount: "Bitcount Prop Double Ink", system-ui, sans-serif;
   --dashboard-bg: #0a0a0c;
   /* Strong page gradient: top-left lighter + subtle indigo, bottom-right deep */
   --dashboard-bg-gradient: linear-gradient(145deg, #1c1c28 0%, #14141e 35%, #0c0c12 70%, #060608 100%);

@@ -94,8 +94,10 @@ export function Dashboard({
     <div className="flex flex-col h-screen min-h-[100dvh] overflow-hidden min-[840px]:flex-row">
       {/* Landscape: sidebar — fixed height, no scroll */}
       <aside className="hidden min-[840px]:flex w-64 flex-shrink-0 flex-col h-full border-r-2 border-[var(--dashboard-border)] shadow-[4px_0_24px_rgba(0,0,0,0.4)]" style={{ background: 'var(--dashboard-surface-gradient)' }}>
-        <div className="p-5 border-b-2 border-[var(--dashboard-border)] bg-gradient-to-b from-[#2a2a38] via-[#1e1e28] to-transparent flex-shrink-0">
-          <span className="text-2xl font-semibold tracking-tight text-white">1000s</span>
+        <div className="px-5 pt-5 pb-1 border-b-2 border-[var(--dashboard-border)] bg-gradient-to-b from-[#2a2a38] via-[#1e1e28] to-transparent flex-shrink-0">
+          <div className="flex items-center justify-center overflow-hidden h-12 min-[840px]:h-14">
+            <img src="/images/1000s-logo.png" alt="1000s" className="h-20 w-auto object-contain object-center min-[840px]:h-24 scale-[1.6]" />
+          </div>
         </div>
         <div className="flex-1 flex flex-col p-4 min-h-0 overflow-hidden border-r border-[var(--dashboard-border)]/50">
           {navContent}
@@ -104,7 +106,7 @@ export function Dashboard({
 
       {/* Main content — only this area scrolls. Nav stays pinned to viewport bottom (flex-1 here). */}
       <main className="flex-1 flex flex-col min-h-0 min-[840px]:min-h-0">
-        <div className="flex-1 flex flex-col min-h-0 overflow-auto p-4 pt-[max(1rem,env(safe-area-inset-top))] min-[840px]:p-8 pb-5 min-[840px]:pb-8" data-home-content={activeMenu === "home" || undefined}>
+        <div className="flex-1 flex flex-col min-h-0 overflow-auto p-4 pt-[max(0.25rem,env(safe-area-inset-top))] min-[840px]:p-6 min-[840px]:pt-[max(0.5rem,env(safe-area-inset-top))] pb-5 min-[840px]:pb-8" data-home-content={activeMenu === "home" || undefined}>
           {children}
         </div>
 
