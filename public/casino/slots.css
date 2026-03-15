@@ -1,5 +1,6 @@
-/* Slots Page - same layout as roulette-page so it fits in viewport on mobile */
+/* Slots Page - same font as app header (Changa One) */
 .slots-page {
+    font-family: "Changa One", system-ui, sans-serif;
     height: 100vh;
     height: 100svh;
     height: 100dvh;
@@ -214,7 +215,7 @@
 }
 
 .game-totals-header-text {
-    font-size: clamp(8px, 2vw, 11px);
+    font-size: clamp(12px, 2.5vw, 16px);
     font-weight: 700;
     color: var(--text-primary);
     text-transform: uppercase;
@@ -242,7 +243,7 @@
 }
 
 .grand-total-item .grand-total-label {
-    font-size: clamp(8px, 1.5vw, 10px);
+    font-size: clamp(11px, 2vw, 14px);
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.03em;
@@ -250,7 +251,7 @@
 }
 
 .grand-total-item .grand-total-value {
-    font-size: clamp(11px, 2vw, 13px);
+    font-size: clamp(14px, 2.5vw, 18px);
     font-weight: 700;
     color: var(--text-primary);
     line-height: 1.2;
@@ -346,7 +347,7 @@
 }
 
 .stat-label {
-    font-size: clamp(8px, 1.5vw, 10px);
+    font-size: clamp(11px, 2vw, 14px);
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.03em;
@@ -355,7 +356,7 @@
 }
 
 .stat-value {
-    font-size: clamp(11px, 2vw, 13px);
+    font-size: clamp(14px, 2.5vw, 18px);
     font-weight: 700;
     color: var(--text-primary);
     text-align: center;
@@ -601,7 +602,7 @@
 }
 
 .mobile-stat-label {
-    font-size: 10px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text-secondary);
     text-transform: uppercase;
@@ -609,7 +610,7 @@
 }
 
 .mobile-stat-value {
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 700;
     color: var(--text-primary);
     word-break: break-word;
@@ -653,7 +654,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 8px;
     flex: 1;
     min-width: 0;
     width: 100%;
@@ -663,7 +664,7 @@
 }
 
 .control-group label {
-    font-size: clamp(8px, 1.5vw, 10px);
+    font-size: clamp(12px, 2vw, 15px);
     font-weight: 600;
     color: var(--text-secondary);
     text-transform: uppercase;
@@ -675,12 +676,13 @@
 }
 
 .control-group input {
-    padding: 4px 6px;
+    font-family: "Changa One", system-ui, sans-serif;
+    padding: 6px 8px;
     background: var(--bg-darker);
     border: 1px solid var(--border-color);
     border-radius: 6px;
     color: var(--text-primary);
-    font-size: clamp(12px, 2.5vw, 14px);
+    font-size: clamp(15px, 3vw, 19px);
     font-weight: 600;
     flex: 1;
     min-width: 0;
@@ -690,6 +692,35 @@
 }
 
 .control-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.control-group select.control-select {
+    font-family: "Changa One", system-ui, sans-serif;
+    padding: 6px 8px;
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: clamp(15px, 3vw, 19px);
+    font-weight: 600;
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    text-align: center;
+    min-height: 0;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='%239ca3af'%3E%3Cpath d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 28px;
+}
+
+.control-group select.control-select:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
@@ -737,8 +768,8 @@
 .btn {
     width: 100%;
     height: 100%;
-    padding: 2px 6px;
-    font-size: clamp(10px, 1.8vw, 12px);
+    padding: 4px 8px;
+    font-size: clamp(14px, 2.2vw, 17px);
     font-weight: 700;
     border: none;
     border-radius: 6px;
@@ -773,7 +804,7 @@
 .btn-spin {
     background: var(--gradient-2);
     color: white;
-    font-size: clamp(18px, 2.5vw, 28px);
+    font-size: clamp(22px, 3vw, 34px);
     font-weight: 800;
     box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
     flex-direction: column;
@@ -797,11 +828,12 @@
 }
 
 .btn-win-percent {
+    font-family: "Changa One", system-ui, sans-serif;
     background: var(--bg-card);
     color: #F59E0B;
     border: 2px solid #F59E0B;
     padding: 8px 16px;
-    font-size: 14px;
+    font-size: 18px;
     font-weight: 600;
     margin-top: 12px;
     width: auto;
@@ -818,12 +850,13 @@
 }
 
 .btn-win-percent-desktop {
+    font-family: "Changa One", system-ui, sans-serif;
     background: var(--bg-card);
     color: #F59E0B;
     border: 2px solid #F59E0B;
     padding: 8px 16px;
-    font-size: 13px;
-    height: 36px;
+    font-size: 16px;
+    height: 40px;
     line-height: 1;
     display: flex;
     align-items: center;
@@ -1943,7 +1976,7 @@
     .control-group {
         flex-direction: column; /* Stack label above input */
         align-items: flex-start;
-        gap: 6px;
+        gap: 8px;
     }
     
     .control-group label {
@@ -2139,7 +2172,7 @@
     }
     
     .control-group {
-        gap: 4px !important;
+        gap: 8px !important;
     }
     
     .control-group label {
@@ -2352,4 +2385,44 @@
         min-height: 0 !important;
         height: auto !important;
     }
+}
+
+/* Force larger game text everywhere - overrides all media queries */
+.slots-page .game-stats-bar .game-totals-header-text {
+    font-size: clamp(14px, 2.5vw, 20px) !important;
+}
+.slots-page .game-stats-bar .grand-total-item .grand-total-label,
+.slots-page .game-stats-bar .grand-total-label {
+    font-size: clamp(12px, 2vw, 16px) !important;
+}
+.slots-page .game-stats-bar .grand-total-item .grand-total-value,
+.slots-page .game-stats-bar .grand-total-value {
+    font-size: clamp(15px, 2.5vw, 22px) !important;
+}
+.slots-page .game-stats-bar .stat-label {
+    font-size: clamp(12px, 2vw, 16px) !important;
+}
+.slots-page .game-stats-bar .stat-value {
+    font-size: clamp(15px, 2.5vw, 22px) !important;
+}
+.slots-page .controls-panel .control-group label {
+    font-size: clamp(13px, 2vw, 17px) !important;
+}
+.slots-page .controls-panel .control-group input,
+.slots-page .controls-panel .control-group select.control-select {
+    font-size: clamp(16px, 3vw, 22px) !important;
+}
+.slots-page .controls-panel .btn,
+.slots-page .controls-panel .btn-spin {
+    font-size: clamp(24px, 3vw, 38px) !important;
+}
+.slots-page .btn-win-percent,
+.slots-page .game-stats-bar .btn-win-percent-desktop {
+    font-size: 18px !important;
+}
+.slots-page .mobile-stat-label {
+    font-size: 14px !important;
+}
+.slots-page .mobile-stat-value {
+    font-size: 20px !important;
 }

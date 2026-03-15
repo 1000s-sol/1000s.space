@@ -15,6 +15,19 @@ const PRICES_CACHE_MS = 60 * 1000;
 
 let pricesCache = { data: null, ts: 0 };
 
+/** Allocation per NFT held for archive collections (airdrop). Slug -> multiplier. */
+const ARCHIVE_ALLOCATION_MULTIPLIERS = {
+  kbds_og: 7,
+  kbds_art: 5,
+  kbds_yotr: 5,
+  kbds_pinups: 20,
+  fcked_catz: 5,
+  celebcatz: 20,
+  money_monsters: 5,
+  moneymonsters3d: 7,
+  ai_bitbots: 3,
+};
+
 function getCollectionsConfig() {
   let list;
   try {
@@ -277,9 +290,78 @@ async function getHolders(queryGroup) {
   return { holders: list, sort: "total" };
 }
 
+/**
+ * Get NFT counts by collection for a single wallet (for airdrop archive allocation).
+ * Uses Helius DAS getAssetsByOwner, then groups by collection.
+ * Returns { slug: count } only for collections in ARCHIVE_ALLOCATION_MULTIPLIERS.
+ */
+async function getWalletCollectionCounts(walletAddress) {
+  const HELIUS_API_KEY = process.env.HELIUS_API_KEY || "";
+  if (!HELIUS_API_KEY) return {};
+  const COLLECTIONS = getCollectionsConfig();
+  const mintToSlug = {};
+  const slugsWithMultiplier = new Set(Object.keys(ARCHIVE_ALLOCATION_MULTIPLIERS));
+  for (const c of COLLECTIONS) {
+    if (c.collectionMint && slugsWithMultiplier.has(c.slug)) {
+      mintToSlug[c.collectionMint] = c.slug;
+    }
+  }
+  if (Object.keys(mintToSlug).length === 0) return {};
+  const counts = {};
+  for (const slug of slugsWithMultiplier) counts[slug] = 0;
+  let page = 1;
+  let hasMore = true;
+  while (hasMore) {
+    try {
+      const res = await fetch(HELIUS_RPC + "/?api-key=" + encodeURIComponent(HELIUS_API_KEY), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: "1",
+          method: "getAssetsByOwner",
+          params: {
+            ownerAddress: walletAddress,
+            page,
+            limit: 1000,
+            options: { showUnverifiedCollections: true },
+          },
+        }),
+      });
+      const data = await res.json();
+      const items = data?.result?.items || [];
+      for (const item of items) {
+        const grouping = item.grouping || [];
+        for (const g of grouping) {
+          const key = g.group_key ?? g.groupKey;
+          const value = g.group_value ?? g.groupValue;
+          if (key === "collection" && value) {
+            const slug = mintToSlug[value];
+            if (slug != null) counts[slug] = (counts[slug] || 0) + 1;
+            break;
+          }
+        }
+      }
+      hasMore = items.length === 1000;
+      page++;
+      if (page > 100) break;
+    } catch (e) {
+      hasMore = false;
+    }
+  }
+  return counts;
+}
+
+function getArchiveAllocationMultipliers() {
+  return { ...ARCHIVE_ALLOCATION_MULTIPLIERS };
+}
+
 module.exports = {
   getCollections,
   getPrices,
   getHolders,
   getCollectionsConfig,
+  getWalletCollectionCounts,
+  getArchiveAllocationMultipliers,
+  ARCHIVE_ALLOCATION_MULTIPLIERS,
 };

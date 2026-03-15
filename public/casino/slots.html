@@ -8,8 +8,11 @@
     <script>
         (function(){var p=new URLSearchParams(window.location.search);window.__SLOTS_TOKEN__=(p.get('token')==='bux')?'bux':'knukl';if(window.self!==window.top)document.documentElement.classList.add('slots-embedded');})();
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Changa+One:ital@0;1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="slots.css?v=4">
+    <link rel="stylesheet" href="slots.css?v=5">
     <link rel="stylesheet" href="slots-mobile.css?v=2">
     <style>
         html.slots-embedded .navbar { display: none !important; }
@@ -29,9 +32,6 @@ body.slots-page .slot-machine-wrapper .slot-machine-main{height:100%!important;m
 body.slots-page .slot-machine-wrapper .controls-panel{align-self:end!important;padding:4px 6px 0!important;padding-bottom:0!important;flex:none!important;min-height:0!important;height:auto!important}
 }
     </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
     <script type="module">
         // Load SPL token library dynamically
@@ -107,7 +107,7 @@ body.slots-page .slot-machine-wrapper .controls-panel{align-self:end!important;p
                     </div>
                     <div class="grand-total-item">
                         <span class="grand-total-label">WON</span>
-                        <span id="grand-total-won" class="grand-total-value">0 XMA</span>
+                        <span id="grand-total-won" class="grand-total-value">0</span>
                     </div>
                 </div>
                 <!-- Horizontal divider under Grand Totals -->
@@ -117,12 +117,12 @@ body.slots-page .slot-machine-wrapper .controls-panel{align-self:end!important;p
                     <!-- Top Left: Balance -->
                     <div class="stat-item">
                         <span class="stat-label">Balance:</span>
-                        <span id="xma-balance" class="stat-value">0 XMA</span>
+                        <span id="xma-balance" class="stat-value">0.00</span>
                     </div>
                     <!-- Top Right: Total Won -->
                     <div class="stat-item">
                         <span class="stat-label">Total Won:</span>
-                        <span id="total-won" class="stat-value">0 XMA</span>
+                        <span id="total-won" class="stat-value">0.00</span>
                     </div>
                     <!-- Bottom Left: Spins Remaining -->
                     <div class="stat-item">
@@ -172,13 +172,13 @@ body.slots-page .slot-machine-wrapper .controls-panel{align-self:end!important;p
                 <!-- Mobile Stats Sidebar -->
                 <div class="mobile-stats-sidebar">
                     <div class="mobile-stat-item">
-                        <span class="mobile-stat-label">Balance: </span><span id="mobile-xma-balance" class="mobile-stat-value">0 XMA</span>
+                        <span class="mobile-stat-label">Balance: </span><span id="mobile-xma-balance" class="mobile-stat-value">0.00</span>
                     </div>
                     <div class="mobile-stat-item">
                         <span class="mobile-stat-label">Spins Remaining: </span><span id="mobile-spins-remaining" class="mobile-stat-value">0</span>
                     </div>
                     <div class="mobile-stat-item">
-                        <span class="mobile-stat-label">Total Won: </span><span id="mobile-total-won" class="mobile-stat-value">0 XMA</span>
+                        <span class="mobile-stat-label">Total Won: </span><span id="mobile-total-won" class="mobile-stat-value">0.00</span>
                     </div>
                     <button id="prize-structure-btn" class="btn-win-percent">win %</button>
                 </div>
@@ -194,13 +194,30 @@ body.slots-page .slot-machine-wrapper .controls-panel{align-self:end!important;p
             <div class="controls-panel">
                 <div class="inputs-row">
                     <div class="control-group">
-                        <label for="cost-per-spin">Cost Per Spin (XMA):</label>
-                        <input type="number" id="cost-per-spin" min="1" max="1500" value="1" step="0.1" title="Max 1,500 XMA per spin">
+                        <label for="cost-per-spin">Cost Per Spin:</label>
+                        <select id="cost-per-spin" class="control-select" title="Cost per spin">
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                            <option value="300">300</option>
+                            <option value="400">400</option>
+                            <option value="500">500</option>
+                            <option value="600">600</option>
+                            <option value="700">700</option>
+                            <option value="800">800</option>
+                            <option value="900">900</option>
+                            <option value="1000">1000</option>
+                        </select>
                     </div>
                     
                     <div class="control-group">
                         <label for="number-of-spins">Number of Spins:</label>
-                        <input type="number" id="number-of-spins" min="1" max="500" value="1" step="1" title="Max 500 per purchase">
+                        <select id="number-of-spins" class="control-select" title="Spins per purchase">
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="30">30</option>
+                            <option value="40">40</option>
+                            <option value="50">50</option>
+                        </select>
                     </div>
                 </div>
 
@@ -223,16 +240,16 @@ body.slots-page .slot-machine-wrapper .controls-panel{align-self:end!important;p
                 <p class="prize-info">Match 3 symbols to win</p>
                 <div class="prize-columns">
                     <div class="prize-column prize-column-left">
-                        <div class="prize-item"><img src="images/symbols/8.png" alt="Grapes" class="prize-symbol-image"><img src="images/symbols/8.png" alt="Grapes" class="prize-symbol-image"><img src="images/symbols/8.png" alt="Grapes" class="prize-symbol-image">: x13</div>
-                        <div class="prize-item"><img src="images/symbols/7.png" alt="Cherry" class="prize-symbol-image"><img src="images/symbols/7.png" alt="Cherry" class="prize-symbol-image"><img src="images/symbols/7.png" alt="Cherry" class="prize-symbol-image">: x16</div>
-                        <div class="prize-item"><img src="images/symbols/6.png" alt="Lemon" class="prize-symbol-image"><img src="images/symbols/6.png" alt="Lemon" class="prize-symbol-image"><img src="images/symbols/6.png" alt="Lemon" class="prize-symbol-image">: x21</div>
-                        <div class="prize-item"><img src="images/symbols/5.png" alt="Orange" class="prize-symbol-image"><img src="images/symbols/5.png" alt="Orange" class="prize-symbol-image"><img src="images/symbols/5.png" alt="Orange" class="prize-symbol-image">: x35</div>
+                        <div class="prize-item"><img data-symbol="1" src="images/symbols/1.png" alt="Grapes" class="prize-symbol-image"><img data-symbol="1" src="images/symbols/1.png" alt="Grapes" class="prize-symbol-image"><img data-symbol="1" src="images/symbols/1.png" alt="Grapes" class="prize-symbol-image">: x13</div>
+                        <div class="prize-item"><img data-symbol="2" src="images/symbols/2.png" alt="Cherry" class="prize-symbol-image"><img data-symbol="2" src="images/symbols/2.png" alt="Cherry" class="prize-symbol-image"><img data-symbol="2" src="images/symbols/2.png" alt="Cherry" class="prize-symbol-image">: x16</div>
+                        <div class="prize-item"><img data-symbol="3" src="images/symbols/3.png" alt="Lemon" class="prize-symbol-image"><img data-symbol="3" src="images/symbols/3.png" alt="Lemon" class="prize-symbol-image"><img data-symbol="3" src="images/symbols/3.png" alt="Lemon" class="prize-symbol-image">: x21</div>
+                        <div class="prize-item"><img data-symbol="4" src="images/symbols/4.png" alt="Orange" class="prize-symbol-image"><img data-symbol="4" src="images/symbols/4.png" alt="Orange" class="prize-symbol-image"><img data-symbol="4" src="images/symbols/4.png" alt="Orange" class="prize-symbol-image">: x35</div>
                     </div>
                     <div class="prize-column prize-column-right">
-                        <div class="prize-item"><img src="images/symbols/4.png" alt="Watermelon" class="prize-symbol-image"><img src="images/symbols/4.png" alt="Watermelon" class="prize-symbol-image"><img src="images/symbols/4.png" alt="Watermelon" class="prize-symbol-image">: x70</div>
-                        <div class="prize-item"><img src="images/symbols/3.png" alt="Star" class="prize-symbol-image"><img src="images/symbols/3.png" alt="Star" class="prize-symbol-image"><img src="images/symbols/3.png" alt="Star" class="prize-symbol-image">: x165</div>
-                        <div class="prize-item"><img src="images/symbols/2.png" alt="Diamond" class="prize-symbol-image"><img src="images/symbols/2.png" alt="Diamond" class="prize-symbol-image"><img src="images/symbols/2.png" alt="Diamond" class="prize-symbol-image">: x550</div>
-                        <div class="prize-item"><img src="images/symbols/1.png" alt="Seven" class="prize-symbol-image"><img src="images/symbols/1.png" alt="Seven" class="prize-symbol-image"><img src="images/symbols/1.png" alt="Seven" class="prize-symbol-image">: x3300</div>
+                        <div class="prize-item"><img data-symbol="5" src="images/symbols/5.png" alt="Watermelon" class="prize-symbol-image"><img data-symbol="5" src="images/symbols/5.png" alt="Watermelon" class="prize-symbol-image"><img data-symbol="5" src="images/symbols/5.png" alt="Watermelon" class="prize-symbol-image">: x70</div>
+                        <div class="prize-item"><img data-symbol="6" src="images/symbols/6.png" alt="Star" class="prize-symbol-image"><img data-symbol="6" src="images/symbols/6.png" alt="Star" class="prize-symbol-image"><img data-symbol="6" src="images/symbols/6.png" alt="Star" class="prize-symbol-image">: x165</div>
+                        <div class="prize-item"><img data-symbol="7" src="images/symbols/7.png" alt="Diamond" class="prize-symbol-image"><img data-symbol="7" src="images/symbols/7.png" alt="Diamond" class="prize-symbol-image"><img data-symbol="7" src="images/symbols/7.png" alt="Diamond" class="prize-symbol-image">: x550</div>
+                        <div class="prize-item"><img data-symbol="8" src="images/symbols/8.png" alt="Seven" class="prize-symbol-image"><img data-symbol="8" src="images/symbols/8.png" alt="Seven" class="prize-symbol-image"><img data-symbol="8" src="images/symbols/8.png" alt="Seven" class="prize-symbol-image">: x3300</div>
                     </div>
                 </div>
                 <div class="prize-footer">

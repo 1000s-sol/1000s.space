@@ -9,7 +9,6 @@ try {
   // dotenv not installed; env from shell only
 }
 const http = require("http");
-const url = require("url");
 const bs58 = require("bs58").default || require("bs58");
 
 const PORT = process.env.API_PORT || 3001;
@@ -120,9 +119,179 @@ async function getCollectionData(col) {
   return out;
 }
 
+const { readBody } = require("./api/readBody.cjs");
+
 const server = http.createServer(async (req, res) => {
-  const parsed = url.parse(req.url || "", true);
-  const path = (parsed.pathname || "").replace(/\/$/, "") || "/";
+  const u = new URL(req.url || "/", "http://localhost");
+  const path = (u.pathname || "").replace(/\/$/, "") || "/";
+  req.query = Object.fromEntries(u.searchParams);
+
+  // Slots API (Supabase) — POST routes need body
+  const slotsPost = [
+    "/api/save-game",
+    "/api/collect",
+    "/api/confirm-collect",
+  ];
+  if (slotsPost.includes(path) && req.method === "POST") {
+    try {
+      req.body = await readBody(req);
+      const mod = require("./api/" + path.replace("/api/", "") + ".cjs");
+      await mod.handler(req, res);
+    } catch (e) {
+      console.error(path, e);
+      res.statusCode = 500;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ error: "Server error", message: e.message }));
+    }
+    return;
+  }
+
+  const slotsGet = ["/api/load-player", "/api/game-stats", "/api/leaderboard"];
+  if (slotsGet.includes(path) && req.method === "GET") {
+    try {
+      const mod = require("./api/" + path.replace("/api/", "") + ".cjs");
+      await mod.handler(req, res);
+    } catch (e) {
+      console.error(path, e);
+      res.statusCode = 500;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ error: "Server error", message: e.message }));
+    }
+    return;
+  }
+
+  if (path === "/api/airdrop/allocation" && req.method === "GET") {
+    try {
+      const mod = require("./api/airdrop/allocation.cjs");
+      const fn = typeof mod === "function" ? mod : mod.handler;
+      await fn(req, res);
+    } catch (e) {
+      console.error(path, e);
+      res.statusCode = 500;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ error: "Server error", message: e.message }));
+    }
+    return;
+  }
+  if (path === "/api/airdrop/claim" && req.method === "POST") {
+    try {
+      req.body = await readBody(req);
+      const mod = require("./api/airdrop/claim.cjs");
+      const fn = typeof mod === "function" ? mod : mod.handler;
+      await fn(req, res);
+    } catch (e) {
+      console.error(path, e);
+      res.statusCode = 500;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ error: "Server error", message: e.message }));
+    }
+    return;
+  }
+  if (path === "/api/airdrop/x-auth" && req.method === "GET") {
+    try {
+      const mod = require("./api/airdrop/x-auth.cjs");
+      const fn = typeof mod === "function" ? mod : mod.handler;
+      await fn(req, res);
+    } catch (e) {
+      console.error(path, e);
+      res.statusCode = 500;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ error: "Server error", message: e.message }));
+    }
+    return;
+  }
+  if (path === "/api/airdrop/x-callback" && req.method === "GET") {
+    try {
+      const mod = require("./api/airdrop/x-callback.cjs");
+      const fn = typeof mod === "function" ? mod : mod.handler;
+      await fn(req, res);
+    } catch (e) {
+      console.error(path, e);
+      res.statusCode = 500;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ error: "Server error", message: e.message }));
+    }
+    return;
+  }
+  if (path === "/api/airdrop/x-unlink" && req.method === "POST") {
+    try {
+      const mod = require("./api/airdrop/x-unlink.cjs");
+      const fn = typeof mod === "function" ? mod : mod.handler;
+      await fn(req, res);
+    } catch (e) {
+      console.error(path, e);
+      res.statusCode = 500;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ error: "Server error", message: e.message }));
+    }
+    return;
+  }
+  if (path === "/api/airdrop/x-status" && req.method === "GET") {
+    try {
+      const mod = require("./api/airdrop/x-status.cjs");
+      const fn = typeof mod === "function" ? mod : mod.handler;
+      await fn(req, res);
+    } catch (e) {
+      console.error(path, e);
+      res.statusCode = 500;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ error: "Server error", message: e.message }));
+    }
+    return;
+  }
+  if (path === "/api/discord/auth" && req.method === "GET") {
+    try {
+      const mod = require("./api/discord/auth.cjs");
+      const fn = typeof mod === "function" ? mod : mod.handler;
+      await fn(req, res);
+    } catch (e) {
+      console.error(path, e);
+      res.statusCode = 500;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ error: "Server error", message: e.message }));
+    }
+    return;
+  }
+  if (path === "/api/discord/callback" && req.method === "GET") {
+    try {
+      const mod = require("./api/discord/callback.cjs");
+      const fn = typeof mod === "function" ? mod : mod.handler;
+      await fn(req, res);
+    } catch (e) {
+      console.error(path, e);
+      res.statusCode = 500;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ error: "Server error", message: e.message }));
+    }
+    return;
+  }
+  if (path === "/api/user/me" && req.method === "GET") {
+    try {
+      const mod = require("./api/user/me.cjs");
+      const fn = typeof mod === "function" ? mod : mod.handler;
+      await fn(req, res);
+    } catch (e) {
+      console.error(path, e);
+      res.statusCode = 500;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ error: "Server error", message: e.message }));
+    }
+    return;
+  }
+  if (path === "/api/user/link-wallet" && req.method === "POST") {
+    try {
+      req.body = await readBody(req);
+      const mod = require("./api/user/link-wallet.cjs");
+      const fn = typeof mod === "function" ? mod : mod.handler;
+      await fn(req, res);
+    } catch (e) {
+      console.error(path, e);
+      res.statusCode = 500;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ error: "Server error", message: e.message }));
+    }
+    return;
+  }
 
   if (path === "/api/collections" && req.method === "GET") {
     res.setHeader("Content-Type", "application/json");
@@ -211,6 +380,19 @@ const server = http.createServer(async (req, res) => {
         console.warn(
           "Holders: add BUX_TOKEN_MINT / KNUKL_TOKEN_MINT and COLLECTION_* in .env for token and NFT counts."
         );
+      }
+    }
+
+    let walletToUser = null;
+    if (process.env.DATABASE_URL) {
+      try {
+        const { sql } = require("./api/slots-helpers.cjs");
+        if (sql) {
+          const rows = await sql`SELECT uw.wallet_address, u.id AS user_id, u.discord_username FROM user_wallets uw JOIN users u ON u.id = uw.user_id`;
+          walletToUser = new Map(rows.map((r) => [r.wallet_address, { user_id: r.user_id, discord_username: r.discord_username || null }]));
+        }
+      } catch (e) {
+        console.warn("Holders: could not load user_wallets for aggregation", e.message);
       }
     }
 
@@ -337,6 +519,62 @@ const server = http.createServer(async (req, res) => {
       collectionCounts: h.collectionCounts || {},
     }));
 
+    if (walletToUser && walletToUser.size > 0) {
+      const byUserId = new Map();
+      const unlinked = [];
+      for (const h of list) {
+        const u = walletToUser.get(h.wallet);
+        if (u) {
+          const key = u.user_id;
+          if (!byUserId.has(key)) {
+            byUserId.set(key, {
+              displayName: u.discord_username || (h.wallet.slice(0, 4) + "…" + h.wallet.slice(-4)),
+              wallets: [h.wallet],
+              tokenBalance: 0,
+              totalNfts: 0,
+              collectionCounts: {},
+            });
+          }
+          const agg = byUserId.get(key);
+          agg.tokenBalance += h.tokenBalance || 0;
+          agg.totalNfts += h.totalNfts || 0;
+          Object.keys(h.collectionCounts || {}).forEach((slug) => {
+            agg.collectionCounts[slug] = (agg.collectionCounts[slug] || 0) + (h.collectionCounts[slug] || 0);
+          });
+          if (!agg.wallets.includes(h.wallet)) agg.wallets.push(h.wallet);
+        } else {
+          unlinked.push({
+            displayName: h.wallet.slice(0, 4) + "…" + h.wallet.slice(-4),
+            wallet: h.wallet,
+            tokenBalance: h.tokenBalance,
+            tokenBalanceFormatted: h.tokenBalanceFormatted,
+            totalNfts: h.totalNfts || 0,
+            collectionCounts: h.collectionCounts || {},
+          });
+        }
+      }
+      list = [
+        ...Array.from(byUserId.values()).map((agg) => ({
+          displayName: agg.displayName,
+          wallets: agg.wallets,
+          tokenBalance: agg.tokenBalance,
+          tokenBalanceFormatted: formatTokenAmount(agg.tokenBalance),
+          totalNfts: agg.totalNfts,
+          collectionCounts: agg.collectionCounts,
+        })),
+        ...unlinked,
+      ];
+    } else {
+      list = list.map((h) => ({
+        displayName: h.wallet.slice(0, 4) + "…" + h.wallet.slice(-4),
+        wallet: h.wallet,
+        tokenBalance: h.tokenBalance,
+        tokenBalanceFormatted: h.tokenBalanceFormatted,
+        totalNfts: h.totalNfts || 0,
+        collectionCounts: h.collectionCounts || {},
+      }));
+    }
+
     const totalScore = (h) => (h.tokenBalance || 0) / 1e6 + (h.totalNfts || 0) * 10;
     list.sort((a, b) => totalScore(b) - totalScore(a));
 
@@ -349,7 +587,10 @@ const server = http.createServer(async (req, res) => {
   if (path === "/api/health" && req.method === "GET") {
     res.setHeader("Content-Type", "application/json");
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.end(JSON.stringify({ ok: true, routes: ["collections", "prices", "holders"] }));
+    res.end(JSON.stringify({
+      ok: true,
+      routes: ["collections", "prices", "holders", "airdrop/allocation", "airdrop/claim", "airdrop/x-auth", "airdrop/x-callback", "airdrop/x-status", "airdrop/x-unlink", "save-game", "load-player", "game-stats", "leaderboard", "collect", "confirm-collect"],
+    }));
     return;
   }
 
