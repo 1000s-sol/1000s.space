@@ -1,3 +1,5 @@
-// Vercel serverless entry for /api/discord/auth (implementation in _auth.cjs to avoid path conflict)
+// Vercel serverless entry for /api/discord/auth (implementation in _auth.cjs)
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 const mod = require("./_auth.cjs");
-module.exports = typeof mod === "function" ? mod : mod.handler;
+export default typeof mod === "function" ? mod : mod.handler;
