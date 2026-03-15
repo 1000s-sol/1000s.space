@@ -2,6 +2,11 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "api/**/*.cjs"
+    }
+  },
   "rewrites": [
     { "source": "/favicon.ico", "destination": "/vite.svg" },
     { "source": "/api/discord/auth", "destination": "/api/index?__r=discord/auth" },

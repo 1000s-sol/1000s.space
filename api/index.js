@@ -1,8 +1,12 @@
 // Single Vercel serverless function for discord, airdrop, and user routes (stays under 12-function limit)
+import path from "path";
+import { fileURLToPath } from "url";
 import { createRequire } from "module";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 
-const readBody = require("./readBody.cjs").readBody;
+const readBody = require(path.join(__dirname, "readBody.cjs")).readBody;
 
 // __r is set by vercel.json rewrites (e.g. discord/auth, airdrop/x-auth)
 const ROUTES = {
@@ -35,7 +39,7 @@ export default async function handler(req, res) {
     if (req.method === "POST" && (modulePath.includes("_claim") || modulePath.includes("_link-wallet"))) {
       req.body = await readBody(req);
     }
-    const mod = require("./" + modulePath);
+    const mod = require(path.join(__dirname, modulePath));
     const fn = typeof mod === "function" ? mod : mod.handler;
     await fn(req, res);
   } catch (e) {
