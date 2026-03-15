@@ -162,7 +162,7 @@ const server = http.createServer(async (req, res) => {
 
   if (path === "/api/airdrop/allocation" && req.method === "GET") {
     try {
-      const mod = require("./api/airdrop/allocation.cjs");
+      const mod = require("./api/airdrop/_allocation.cjs");
       const fn = typeof mod === "function" ? mod : mod.handler;
       await fn(req, res);
     } catch (e) {
@@ -176,7 +176,7 @@ const server = http.createServer(async (req, res) => {
   if (path === "/api/airdrop/claim" && req.method === "POST") {
     try {
       req.body = await readBody(req);
-      const mod = require("./api/airdrop/claim.cjs");
+      const mod = require("./api/airdrop/_claim.cjs");
       const fn = typeof mod === "function" ? mod : mod.handler;
       await fn(req, res);
     } catch (e) {
@@ -189,7 +189,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (path === "/api/airdrop/x-auth" && req.method === "GET") {
     try {
-      const mod = require("./api/airdrop/x-auth.cjs");
+      const mod = require("./api/airdrop/_x-auth.cjs");
       const fn = typeof mod === "function" ? mod : mod.handler;
       await fn(req, res);
     } catch (e) {
@@ -202,7 +202,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (path === "/api/airdrop/x-callback" && req.method === "GET") {
     try {
-      const mod = require("./api/airdrop/x-callback.cjs");
+      const mod = require("./api/airdrop/_x-callback.cjs");
       const fn = typeof mod === "function" ? mod : mod.handler;
       await fn(req, res);
     } catch (e) {
@@ -215,7 +215,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (path === "/api/airdrop/x-unlink" && req.method === "POST") {
     try {
-      const mod = require("./api/airdrop/x-unlink.cjs");
+      const mod = require("./api/airdrop/_x-unlink.cjs");
       const fn = typeof mod === "function" ? mod : mod.handler;
       await fn(req, res);
     } catch (e) {
@@ -228,7 +228,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (path === "/api/airdrop/x-status" && req.method === "GET") {
     try {
-      const mod = require("./api/airdrop/x-status.cjs");
+      const mod = require("./api/airdrop/_x-status.cjs");
       const fn = typeof mod === "function" ? mod : mod.handler;
       await fn(req, res);
     } catch (e) {
