@@ -2,5 +2,17 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "rewrites": [{ "source": "/favicon.ico", "destination": "/vite.svg" }]
+  "rewrites": [
+    { "source": "/favicon.ico", "destination": "/vite.svg" },
+    { "source": "/api/discord/auth", "destination": "/api/index?__r=discord/auth" },
+    { "source": "/api/discord/callback", "destination": "/api/index?__r=discord/callback" },
+    { "source": "/api/airdrop/allocation", "destination": "/api/index?__r=airdrop/allocation" },
+    { "source": "/api/airdrop/claim", "destination": "/api/index?__r=airdrop/claim" },
+    { "source": "/api/airdrop/x-auth", "destination": "/api/index?__r=airdrop/x-auth" },
+    { "source": "/api/airdrop/x-callback", "destination": "/api/index?__r=airdrop/x-callback" },
+    { "source": "/api/airdrop/x-unlink", "destination": "/api/index?__r=airdrop/x-unlink" },
+    { "source": "/api/airdrop/x-status", "destination": "/api/index?__r=airdrop/x-status" },
+    { "source": "/api/user/me", "destination": "/api/index?__r=user/me" },
+    { "source": "/api/user/link-wallet", "destination": "/api/index?__r=user/link-wallet" }
+  ]
 }
