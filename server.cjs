@@ -267,7 +267,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (path === "/api/user/me" && req.method === "GET") {
     try {
-      const mod = require("./api/user/me.cjs");
+      const mod = require("./api/user/_me.cjs");
       const fn = typeof mod === "function" ? mod : mod.handler;
       await fn(req, res);
     } catch (e) {
@@ -281,7 +281,7 @@ const server = http.createServer(async (req, res) => {
   if (path === "/api/user/link-wallet" && req.method === "POST") {
     try {
       req.body = await readBody(req);
-      const mod = require("./api/user/link-wallet.cjs");
+      const mod = require("./api/user/_link-wallet.cjs");
       const fn = typeof mod === "function" ? mod : mod.handler;
       await fn(req, res);
     } catch (e) {
