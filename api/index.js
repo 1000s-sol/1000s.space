@@ -1,25 +1,21 @@
 // Single Vercel serverless function for discord, airdrop, and user routes (stays under 12-function limit)
-import path from "path";
-import { fileURLToPath } from "url";
 import { createRequire } from "module";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 
-const readBody = require(path.join(__dirname, "readBody.cjs")).readBody;
+const readBody = require("./readBody.cjs").readBody;
 
-// __r is set by vercel.json rewrites (e.g. discord/auth, airdrop/x-auth)
-const ROUTES = {
-  "GET discord/auth": "discord/_auth.cjs",
-  "GET discord/callback": "discord/_callback.cjs",
-  "GET airdrop/allocation": "airdrop/_allocation.cjs",
-  "POST airdrop/claim": "airdrop/_claim.cjs",
-  "GET airdrop/x-auth": "airdrop/_x-auth.cjs",
-  "GET airdrop/x-callback": "airdrop/_x-callback.cjs",
-  "POST airdrop/x-unlink": "airdrop/_x-unlink.cjs",
-  "GET airdrop/x-status": "airdrop/_x-status.cjs",
-  "GET user/me": "user/_me.cjs",
-  "POST user/link-wallet": "user/_link-wallet.cjs",
+// Static requires (literal paths) so Vercel's bundler includes all handler modules and their deps
+const handlers = {
+  "GET discord/auth": require("./discord/_auth.cjs"),
+  "GET discord/callback": require("./discord/_callback.cjs"),
+  "GET airdrop/allocation": require("./airdrop/_allocation.cjs"),
+  "POST airdrop/claim": require("./airdrop/_claim.cjs"),
+  "GET airdrop/x-auth": require("./airdrop/_x-auth.cjs"),
+  "GET airdrop/x-callback": require("./airdrop/_x-callback.cjs"),
+  "POST airdrop/x-unlink": require("./airdrop/_x-unlink.cjs"),
+  "GET airdrop/x-status": require("./airdrop/_x-status.cjs"),
+  "GET user/me": require("./user/_me.cjs"),
+  "POST user/link-wallet": require("./user/_link-wallet.cjs"),
 };
 
 export default async function handler(req, res) {
@@ -27,20 +23,19 @@ export default async function handler(req, res) {
   req.query = Object.fromEntries(url.searchParams);
   const route = (req.query.__r || "").replace(/^\/+|\/+$/g, "");
   const key = `${req.method || "GET"} ${route}`;
-  const modulePath = ROUTES[key];
-  if (!modulePath) {
+  delete req.query.__r;
+  const mod = handlers[key];
+  if (!mod) {
     res.statusCode = 404;
     res.setHeader("Content-Type", "application/json");
     res.end(JSON.stringify({ error: "Not found", code: "NOT_FOUND" }));
     return;
   }
-  delete req.query.__r;
+  const fn = typeof mod === "function" ? mod : mod.handler;
   try {
-    if (req.method === "POST" && (modulePath.includes("_claim") || modulePath.includes("_link-wallet"))) {
+    if (req.method === "POST" && (key.includes("claim") || key.includes("link-wallet"))) {
       req.body = await readBody(req);
     }
-    const mod = require(path.join(__dirname, modulePath));
-    const fn = typeof mod === "function" ? mod : mod.handler;
     await fn(req, res);
   } catch (e) {
     console.error(route, e);
