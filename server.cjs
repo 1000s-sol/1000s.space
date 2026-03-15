@@ -241,7 +241,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (path === "/api/discord/auth" && req.method === "GET") {
     try {
-      const mod = require("./api/discord/auth.cjs");
+      const mod = require("./api/discord/_auth.cjs");
       const fn = typeof mod === "function" ? mod : mod.handler;
       await fn(req, res);
     } catch (e) {
@@ -254,7 +254,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (path === "/api/discord/callback" && req.method === "GET") {
     try {
-      const mod = require("./api/discord/callback.cjs");
+      const mod = require("./api/discord/_callback.cjs");
       const fn = typeof mod === "function" ? mod : mod.handler;
       await fn(req, res);
     } catch (e) {
