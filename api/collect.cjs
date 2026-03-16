@@ -8,7 +8,7 @@ const {
 } = require("@solana/spl-token");
 const { sql, setCors, json } = require("./slots-helpers.cjs");
 
-const TREASURY_WALLET = process.env.TREASURY_WALLET || "6auNHk39Mut82FhjY9iBZXjqm7xJabFVrY3bVgrYSMvj";
+const TREASURY_WALLET = process.env.TREASURY_WALLET;
 
 function getTokenMintAndDecimals(token) {
   const isBux = token === "bux";
@@ -80,6 +80,9 @@ async function handler(req, res) {
     const treasuryPrivateKey = process.env.TREASURY_PRIVATE_KEY;
     if (!treasuryPrivateKey) {
       return json(res, 500, { error: "Server configuration error", message: "TREASURY_PRIVATE_KEY not set" });
+    }
+    if (!TREASURY_WALLET) {
+      return json(res, 500, { error: "Server configuration error", message: "TREASURY_WALLET not set in .env" });
     }
 
     let treasuryKeypair;
