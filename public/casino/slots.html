@@ -3,16 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
     <meta name="description" content="1000s Slots">
     <title>Slots · 1000s</title>
     <script>
-        (function(){var p=new URLSearchParams(window.location.search);window.__SLOTS_TOKEN__=(p.get('token')==='bux')?'bux':'knukl';if(window.self!==window.top)document.documentElement.classList.add('slots-embedded');})();
+        (function(){
+            var p=new URLSearchParams(window.location.search);
+            window.__SLOTS_TOKEN__=(p.get('token')==='bux')?'bux':'knukl';
+            if(window.self!==window.top){
+                document.documentElement.classList.add('slots-embedded');
+                var html=document.documentElement;
+                html.style.setProperty('width','100%');
+                html.style.setProperty('max-width','none');
+                html.style.setProperty('overflow-x','hidden');
+                document.addEventListener('DOMContentLoaded',function(){
+                    document.body.style.setProperty('width','100%');
+                    document.body.style.setProperty('max-width','none');
+                    document.body.style.setProperty('min-width','0');
+                    var c=document.querySelector('.slots-container');
+                    if(c){ c.style.setProperty('width','100%'); c.style.setProperty('max-width','none'); c.style.setProperty('min-width','100%'); }
+                    var w=document.querySelector('.slot-machine-wrapper');
+                    if(w){ w.style.setProperty('width','100%'); w.style.setProperty('max-width','none'); w.style.setProperty('min-width','100%'); }
+                });
+            }
+        })();
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Changa+One:ital@0;1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="slots.css?v=5">
+    <link rel="stylesheet" href="slots.css?v=8">
     <link rel="stylesheet" href="slots-mobile.css?v=2">
     <style>
         html.slots-embedded .navbar { display: none !important; }
@@ -22,14 +43,51 @@
         html.slots-embedded .slot-machine-wrapper { grid-template-rows: auto 1fr auto !important; gap: 0 !important; }
     </style>
     <style id="slots-mobile-inline">
-/* Inline so it always applies: no gap below buttons, full width */
+/* Force full width in embedded/mobile – no media query so it always wins. Use 100% so we fill the iframe. */
+html.slots-embedded,
+html:has(body.slots-page) {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+}
+html.slots-embedded body,
+html:has(body.slots-page) body.slots-page {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  box-sizing: border-box !important;
+}
+html body.slots-page .slots-container {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 100% !important;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  box-sizing: border-box !important;
+}
+html body.slots-page .slot-machine-wrapper {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 100% !important;
+}
+body.slots-page .slot-machine-main,
+body.slots-page .slot-machine-main .reels-container {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 100% !important;
+  box-sizing: border-box !important;
+}
 @media (max-width:768px){
-body.slots-page{padding-left:0!important;padding-right:0!important;width:100%!important;overflow-x:hidden!important}
-body.slots-page .slots-container{padding:0!important;margin:0!important;width:100%!important;max-width:none!important}
-body.slots-page .slot-machine-wrapper{display:grid!important;grid-template-rows:1fr 1fr auto!important;gap:2px!important;width:100%!important;height:100%!important;min-height:0!important}
-body.slots-page .slot-machine-wrapper .game-stats-bar{align-self:start!important}
+body.slots-page .slot-machine-wrapper{display:grid!important;grid-template-rows:minmax(0,1fr) minmax(0,1fr) auto!important;gap:0 2px!important;row-gap:0!important;height:100%!important;min-height:0!important}
+body.slots-page .slot-machine-wrapper .game-stats-bar{align-self:start!important;flex-shrink:0!important}
 body.slots-page .slot-machine-wrapper .slot-machine-main{height:100%!important;min-height:0!important;max-height:100%!important;flex:1 1 0!important}
-body.slots-page .slot-machine-wrapper .controls-panel{align-self:end!important;padding:4px 6px 0!important;padding-bottom:0!important;flex:none!important;min-height:0!important;height:auto!important}
+body.slots-page .slot-machine-wrapper .controls-panel{align-self:end!important;padding:4px 6px 4px!important;flex:none!important;min-height:0!important;height:auto!important}
 }
     </style>
     <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
@@ -44,7 +102,7 @@ body.slots-page .slot-machine-wrapper .controls-panel{align-self:end!important;p
         });
     </script>
 </head>
-<body class="slots-page">
+<body class="slots-page" style="width:100%;max-width:100%;margin:0;padding:0;">
     <!-- Landscape Orientation Prompt -->
     <div id="orientation-prompt" class="orientation-prompt">
         <div class="orientation-content">
@@ -91,8 +149,8 @@ body.slots-page .slot-machine-wrapper .controls-panel{align-self:end!important;p
     </nav>
 
     <!-- Slot Machine Container -->
-    <div class="slots-container">
-        <div class="slot-machine-wrapper">
+    <div class="slots-container" style="width:100%;max-width:none;min-width:100%;margin:0;padding:0;box-sizing:border-box;">
+        <div class="slot-machine-wrapper" style="width:100%;max-width:none;min-width:100%;box-sizing:border-box;">
             <!-- Game Stats -->
             <div class="game-stats-bar">
                 <!-- Game Totals Header -->
@@ -298,6 +356,34 @@ body.slots-page .slot-machine-wrapper .controls-panel{align-self:end!important;p
         </div>
     </div>
 
+    <script>
+        (function(){
+            function forceFullWidth(){
+                var w = document.documentElement.clientWidth;
+                document.documentElement.style.width = w + 'px';
+                document.documentElement.style.minWidth = w + 'px';
+                document.documentElement.style.maxWidth = w + 'px';
+                document.body.style.width = w + 'px';
+                document.body.style.minWidth = w + 'px';
+                document.body.style.maxWidth = w + 'px';
+                ['.slots-container','.slot-machine-wrapper','.slot-machine-main','.reels-container'].forEach(function(sel){
+                    var el = document.querySelector(sel);
+                    if(el){
+                        el.style.width = w + 'px';
+                        el.style.minWidth = w + 'px';
+                        el.style.maxWidth = w + 'px';
+                    }
+                });
+            }
+            if(document.readyState === 'loading'){
+                document.addEventListener('DOMContentLoaded', function(){ forceFullWidth(); });
+            } else {
+                forceFullWidth();
+            }
+            window.addEventListener('resize', forceFullWidth);
+            window.addEventListener('orientationchange', function(){ setTimeout(forceFullWidth, 100); });
+        })();
+    </script>
     <script src="slots.js"></script>
 </body>
 </html>

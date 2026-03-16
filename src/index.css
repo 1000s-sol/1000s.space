@@ -69,6 +69,30 @@ body:has([data-dashboard-root]) {
   height: 100%;
 }
 
+/* Game page (e.g. /games/slots): full viewport width so iframe has no gap on the right in mobile portrait */
+#root:has([data-game-page]) {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  min-width: 100vw !important;
+  overflow-x: hidden;
+}
+/* Force full width on the game page, iframe, and every wrapper in between */
+#root:has([data-game-page]) [data-game-page],
+#root:has([data-game-page]) .game-page-iframe-wrap,
+#root:has([data-game-page]) .game-page-iframe-wrap iframe {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+#root:has([data-game-page]) [data-game-page] {
+  min-width: 100vw !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+}
+body:has([data-game-page]) {
+  overflow-x: hidden !important;
+}
+
 #root:has([data-dashboard-root]) {
   height: var(--window-height, 100%);
   min-height: 0;

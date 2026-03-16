@@ -22,7 +22,35 @@ export function GamePage() {
   const config = gameId && gameId in GAME_CONFIG ? GAME_CONFIG[gameId as GameId] : null;
   const isSlots = config && gameId === "slots";
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const iframeWrapRef = useRef<HTMLDivElement>(null);
   const { walletAddress: mainWalletAddress } = useWallet();
+
+  /* Force iframe + wrapper to viewport width in pixels so nothing can constrain them */
+  useEffect(() => {
+    if (!config?.built || !config?.iframeSrc) return;
+    const setWidth = () => {
+      const w = window.innerWidth;
+      if (iframeWrapRef.current) {
+        iframeWrapRef.current.style.setProperty("width", `${w}px`, "important");
+        iframeWrapRef.current.style.setProperty("min-width", `${w}px`, "important");
+        iframeWrapRef.current.style.setProperty("max-width", `${w}px`, "important");
+      }
+      if (iframeRef.current) {
+        iframeRef.current.style.setProperty("width", `${w}px`, "important");
+        iframeRef.current.style.setProperty("min-width", `${w}px`, "important");
+        iframeRef.current.style.setProperty("max-width", `${w}px`, "important");
+      }
+    };
+    setWidth();
+    const t1 = setTimeout(setWidth, 50);
+    const t2 = setTimeout(setWidth, 300);
+    window.addEventListener("resize", setWidth);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      window.removeEventListener("resize", setWidth);
+    };
+  }, [config?.built, config?.iframeSrc]);
   const [slotsWalletAddress, setSlotsWalletAddress] = useState<string | null>(null);
   const iframeWalletSyncedRef = useRef(false);
 
@@ -84,6 +112,52 @@ export function GamePage() {
     if (t === "knukl" || t === "bux") setSlotsToken(t);
   }, [searchParams]);
 
+  /* One-time width diagnostic: find which element is actually constraining the layout.
+     Open /games/slots, open DevTools Console, look for "WIDTH DIAGNOSTIC". */
+  useEffect(() => {
+    if (!config?.built || !config?.iframeSrc || !iframeRef.current) return;
+    const t = setTimeout(() => {
+      const iframe = iframeRef.current;
+      if (!iframe) return;
+      const vw = window.innerWidth;
+      const rows: string[] = [];
+      rows.push(`viewport innerWidth = ${vw}`);
+      let el: HTMLElement | null = iframe;
+      while (el) {
+        const w = el.offsetWidth;
+        const rect = el.getBoundingClientRect?.();
+        const tag = el.tagName.toLowerCase();
+        const id = el.id ? `#${el.id}` : "";
+        const cls = (el.className && typeof el.className === "string") ? el.className.slice(0, 60) : "";
+        const narrow = w < vw ? " ← NARROW (this is the constraint)" : "";
+        rows.push(`  ${tag}${id} .${cls}  offsetWidth=${w}  rect.width=${rect?.width ?? "?"}${narrow}`);
+        el = el.parentElement;
+        if (el?.id === "root") {
+          rows.push(`  #root  offsetWidth=${el.offsetWidth}  rect.width=${el.getBoundingClientRect?.()?.width ?? "?"}`);
+          break;
+        }
+      }
+      try {
+        const doc = iframe.contentDocument;
+        if (doc?.body) {
+          rows.push("--- inside iframe ---");
+          for (const sel of ["body", ".slots-container", ".slot-machine-wrapper"]) {
+            const n = doc.querySelector(sel);
+            if (n && n instanceof HTMLElement) {
+              const w = n.offsetWidth;
+              const narrow = w < vw ? " ← NARROW" : "";
+              rows.push(`  ${sel}  offsetWidth=${w}${narrow}`);
+            }
+          }
+        }
+      } catch {
+        rows.push("(iframe doc not accessible)");
+      }
+      console.log("WIDTH DIAGNOSTIC\n" + rows.join("\n"));
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [config]);
+
   const handleSlotsTokenChange = (t: SlotsToken) => {
     setSlotsToken(t);
     setSearchParams({ token: t }, { replace: true });
@@ -101,12 +175,27 @@ export function GamePage() {
   const iframeSrc =
     config.built && config.iframeSrc
       ? isSlots
-        ? `${config.iframeSrc}?token=${slotsToken}`
+        ? `${config.iframeSrc}?token=${slotsToken}&cb=2`
         : config.iframeSrc
       : undefined;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--dashboard-bg)]">
+    <div
+      data-game-page
+      className="flex flex-col bg-[var(--dashboard-bg)] overflow-x-hidden"
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100vw",
+        height: "100vh",
+        boxSizing: "border-box",
+        margin: 0,
+        padding: 0,
+      }}
+    >
       {/* Desktop header (sm and up): original single-row layout unchanged */}
       <header className="flex-shrink-0 hidden sm:flex items-center gap-3 px-4 py-3 border-b-2 border-[var(--dashboard-border)] bg-[var(--dashboard-surface)]">
         <Link
@@ -284,15 +373,24 @@ export function GamePage() {
       </header>
 
       {iframeSrc ? (
-        <iframe
-          ref={iframeRef}
-          key={iframeSrc}
-          title={config.title}
-          src={iframeSrc}
-          className="flex-1 w-full min-h-0 border-0 block"
-          style={{ margin: 0, verticalAlign: "top" }}
-          allow="fullscreen"
-        />
+        <div
+          ref={iframeWrapRef}
+          className="game-page-iframe-wrap flex-1 min-h-0 flex flex-col"
+        >
+          <iframe
+            ref={iframeRef}
+            key={iframeSrc}
+            title={config.title}
+            src={iframeSrc}
+            className="flex-1 border-0 block"
+            style={{
+              margin: 0,
+              verticalAlign: "top",
+              display: "block",
+            }}
+            allow="fullscreen"
+          />
+        </div>
       ) : (
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="rounded-2xl border-2 border-[var(--dashboard-border)] p-8 text-center max-w-md" style={{ background: 'var(--dashboard-card)' }}>
