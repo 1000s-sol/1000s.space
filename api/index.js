@@ -16,6 +16,13 @@ const handlers = {
   "GET airdrop/x-status": require("./airdrop/_x-status.cjs"),
   "GET user/me": require("./user/_me.cjs"),
   "POST user/link-wallet": require("./user/_link-wallet.cjs"),
+  // Slots persistence (Neon DB)
+  "GET load-player": require("./load-player.cjs"),
+  "GET game-stats": require("./game-stats.cjs"),
+  "GET leaderboard": require("./leaderboard.cjs"),
+  "POST save-game": require("./save-game.cjs"),
+  "POST collect": require("./collect.cjs"),
+  "POST confirm-collect": require("./confirm-collect.cjs"),
 };
 
 export default async function handler(req, res) {
@@ -33,7 +40,7 @@ export default async function handler(req, res) {
   }
   const fn = typeof mod === "function" ? mod : mod.handler;
   try {
-    if (req.method === "POST" && (key.includes("claim") || key.includes("link-wallet"))) {
+    if (req.method === "POST" && (key.includes("claim") || key.includes("link-wallet") || key.includes("save-game") || key.includes("collect") || key.includes("confirm-collect"))) {
       req.body = await readBody(req);
     }
     await fn(req, res);

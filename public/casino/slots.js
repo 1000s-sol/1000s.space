@@ -37,16 +37,31 @@ const SPIN_COST = 100; // Default cost per spin
 const MAX_COST_PER_SPIN = 1500; // Cap cost per spin to protect bank
 const MAX_SPINS_PER_PURCHASE = 500; // Max spins per purchase
 const SLOT_MACHINE_PROGRAM_ID = 'Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'; // Update with actual program ID
-const TOKEN_MINT = 'HVSruatutKcgpZJXYyeRCWAnyT7mzYq1io9YoJ6F4yMP'; // Token mint address
+// Token mints: BUX (1000s) and KNUKL — must match the token selected via ?token=bux
+const BUX_TOKEN_MINT = 'AaKrMsZkuAdJL6TKZbj7X1VaH5qWioL7oDHagQZa1w59';
+const KNUKL_TOKEN_MINT = '6sYhJZDwqHpv1shyVeZ91tx8QYSiHJh2bio97Qdhq1br';
 const TREASURY_WALLET = '6auNHk39Mut82FhjY9iBZXjqm7xJabFVrY3bVgrYSMvj'; // Treasury wallet address
-const TOKEN_DECIMALS = 6; // Token decimals
-const PURCHASE_FEE_SOL = 0.002; // Split: 0.0012 to treasury, 0.0008 to partner
-const FEE_TREASURY_LAMPORTS = 1_200_000;   // 0.0012 SOL -> treasury
-const FEE_PARTNER_LAMPORTS = 800_000;      // 0.0008 SOL -> partner
+const BUX_DECIMALS = 9;
+const KNUKL_DECIMALS = 6;
+const PURCHASE_FEE_SOL = 0; // Disabled for testing. Was: 0.002 (0.0012 treasury, 0.0008 partner)
+const FEE_TREASURY_LAMPORTS = 0;   // 0.0012 SOL -> treasury when enabled
+const FEE_PARTNER_LAMPORTS = 0;    // 0.0008 SOL -> partner when enabled
 const FEE_PARTNER_WALLET = '3WNHW6sr1sQdbRjovhPrxgEJdWASZ43egGWMMNrhgoRR';
 
+function isBuxToken() {
+    return typeof window.__SLOTS_TOKEN__ !== 'undefined' && window.__SLOTS_TOKEN__ === 'bux';
+}
+
 function getTokenLabel() {
-    return (typeof window.__SLOTS_TOKEN__ !== 'undefined' && window.__SLOTS_TOKEN__ === 'bux') ? 'BUX' : 'KNUKL';
+    return isBuxToken() ? 'BUX' : 'KNUKL';
+}
+
+function getTokenMint() {
+    return isBuxToken() ? BUX_TOKEN_MINT : KNUKL_TOKEN_MINT;
+}
+
+function getTokenDecimals() {
+    return isBuxToken() ? BUX_DECIMALS : KNUKL_DECIMALS;
 }
 
 function getSymbolsBasePath() {
@@ -91,6 +106,48 @@ let isAutoSpinning = false;
 let backgroundMusic = null;
 let isMusicPlaying = true; // Default to on
 
+const SOLSCAN_TX_BASE = 'https://solscan.io/tx/';
+
+// Themed popup for success/error (buy, collect, wallet). Replaces alert().
+function showSlotsMessage(options) {
+    const { title, message, txSignature, isError } = options;
+    const modal = document.getElementById('message-modal');
+    const titleEl = document.getElementById('message-modal-title');
+    const textEl = document.getElementById('message-modal-text');
+    const txLink = document.getElementById('message-modal-tx-link');
+    const okBtn = document.getElementById('message-modal-ok');
+    if (!modal || !titleEl || !textEl) return;
+    modal.classList.remove('success', 'error');
+    modal.classList.add(isError ? 'error' : 'success');
+    titleEl.textContent = title || (isError ? 'Error' : 'Success');
+    textEl.textContent = message || '';
+    if (txSignature && txLink) {
+        txLink.href = SOLSCAN_TX_BASE + txSignature;
+        txLink.style.display = '';
+    } else if (txLink) {
+        txLink.style.display = 'none';
+    }
+    modal.classList.add('show');
+}
+
+function setupMessageModal() {
+    const modal = document.getElementById('message-modal');
+    const closeBtn = document.getElementById('close-message-modal');
+    const okBtn = document.getElementById('message-modal-ok');
+    if (!modal) return;
+    function close() {
+        modal.classList.remove('show');
+    }
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    if (okBtn) okBtn.addEventListener('click', close);
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) close();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal.classList.contains('show')) close();
+    });
+}
+
 // Global so HTML onclick can call it – no addEventListener timing issues
 window.toggleSlotsMusic = function () {
     isMusicPlaying = !isMusicPlaying;
@@ -119,6 +176,13 @@ let FIXED_REEL_ORDER = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    // Listen for parent (GamePage) music toggle immediately so header button works before SPL loads
+    window.addEventListener('message', function (e) {
+        if (e.data && e.data.type === 'TOGGLE_MUSIC' && typeof window.toggleSlotsMusic === 'function') {
+            window.toggleSlotsMusic();
+        }
+    });
+
     // Create fixed reel order once (same for all reels)
     FIXED_REEL_ORDER = createFixedReelOrder();
     
@@ -127,6 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Wait for SPL token library to load before setting up wallet
     const initWhenReady = () => {
         setCurrencyLabels();
+        setupMessageModal();
         setupWalletConnection();
         setupGameControls();
         setupPrizeModal();
@@ -256,6 +321,32 @@ function initializeReels() {
 }
 
 // Wallet Connection
+var RPC_URL = 'https://mainnet.helius-rpc.com/?api-key=277997e8-09ce-4516-a03e-5b062b51c6ac';
+
+function initConnection() {
+    if (typeof window.solanaWeb3 !== 'undefined') {
+        connection = new window.solanaWeb3.Connection(RPC_URL, 'confirmed', { commitment: 'confirmed', disableRetryOnRateLimit: false, httpHeaders: { 'Content-Type': 'application/json' } });
+    } else if (typeof solanaWeb3 !== 'undefined') {
+        connection = new solanaWeb3.Connection(RPC_URL, 'confirmed', { commitment: 'confirmed', disableRetryOnRateLimit: false, httpHeaders: { 'Content-Type': 'application/json' } });
+    }
+}
+
+async function applyWalletConnected(addr, connectContainer, walletInfo, walletAddressEl) {
+    wallet = addr;
+    if (walletAddressEl) walletAddressEl.textContent = addr ? (addr.slice(0, 4) + '...' + addr.slice(-4)) : '';
+    if (connectContainer) connectContainer.style.display = addr ? 'none' : 'block';
+    if (walletInfo) walletInfo.style.display = addr ? 'flex' : 'none';
+    if (addr) {
+        initConnection();
+        await updateBalance();
+        await loadPlayerData();
+        updateButtonStates();
+        try { window.parent.postMessage({ type: 'WALLET_CONNECTED', address: addr }, '*'); } catch (_) {}
+    } else {
+        try { window.parent.postMessage({ type: 'WALLET_DISCONNECTED' }, '*'); } catch (_) {}
+    }
+}
+
 async function setupWalletConnection() {
     const connectBtn = document.getElementById('connect-wallet');
     const disconnectBtn = document.getElementById('disconnect-wallet');
@@ -263,100 +354,16 @@ async function setupWalletConnection() {
     const walletAddress = document.getElementById('wallet-address');
     const connectContainer = document.getElementById('connect-wallet');
     
-    // Check if Phantom wallet is installed
-    // Phantom injects window.solana, check for isPhantom or if it has connect method
-    const isPhantomInstalled = typeof window.solana !== 'undefined' && 
-        (window.solana.isPhantom || typeof window.solana.connect === 'function');
+    var isPhantomInstalled = typeof window.solana !== 'undefined' && (window.solana.isPhantom || typeof window.solana.connect === 'function');
     
-    if (isPhantomInstalled) {
-        // Check if already connected
-        try {
-            if (window.solana.isConnected) {
-                const resp = await window.solana.connect({ onlyIfTrusted: true });
-                if (resp) {
-                    wallet = resp.publicKey.toString();
-                    walletAddress.textContent = `${wallet.slice(0, 4)}...${wallet.slice(-4)}`;
-                    connectContainer.style.display = 'none';
-                    walletInfo.style.display = 'flex';
-                    
-                    // Initialize connection
-                    const rpcUrl = 'https://mainnet.helius-rpc.com/?api-key=277997e8-09ce-4516-a03e-5b062b51c6ac';
-                    if (typeof window.solanaWeb3 !== 'undefined') {
-                        connection = new window.solanaWeb3.Connection(rpcUrl, 'confirmed');
-                    } else if (typeof solanaWeb3 !== 'undefined') {
-                        connection = new solanaWeb3.Connection(rpcUrl, 'confirmed');
-                    }
-                    
-                    await updateBalance();
-                    await loadPlayerData(); // Load saved player data from database
-                    updateButtonStates();
-                }
-            }
-        } catch (err) {
-            // Not connected, that's fine - user will click connect button
-            console.log('Wallet not auto-connected:', err.message);
+    window.addEventListener('message', function(e) {
+        if (!e.data || !e.data.type) return;
+        if (e.data.type === 'CONNECT_WALLET' && connectBtn) connectBtn.click();
+        if (e.data.type === 'WALLET_ADDRESS' && e.data.address) {
+            applyWalletConnected(e.data.address, connectContainer, walletInfo, walletAddress);
         }
-        
-        connectBtn.addEventListener('click', async () => {
-            try {
-                // Request connection with explicit options
-                const resp = await window.solana.connect({
-                    onlyIfTrusted: false
-                });
-                
-                wallet = resp.publicKey.toString();
-                walletAddress.textContent = `${wallet.slice(0, 4)}...${wallet.slice(-4)}`;
-                connectContainer.style.display = 'none';
-                walletInfo.style.display = 'flex';
-                
-                // Initialize connection using solanaWeb3 from the loaded script
-                // Use Helius RPC endpoint (dedicated service, no rate limits)
-                const rpcUrl = 'https://mainnet.helius-rpc.com/?api-key=277997e8-09ce-4516-a03e-5b062b51c6ac';
-                
-                if (typeof window.solanaWeb3 !== 'undefined') {
-                    connection = new window.solanaWeb3.Connection(
-                        rpcUrl,
-                        'confirmed',
-                        {
-                            commitment: 'confirmed',
-                            disableRetryOnRateLimit: false,
-                            httpHeaders: {
-                                'Content-Type': 'application/json'
-                            }
-                        }
-                    );
-                } else if (typeof solanaWeb3 !== 'undefined') {
-                    connection = new solanaWeb3.Connection(
-                        rpcUrl,
-                        'confirmed',
-                        {
-                            commitment: 'confirmed',
-                            disableRetryOnRateLimit: false,
-                            httpHeaders: {
-                                'Content-Type': 'application/json'
-                            }
-                        }
-                    );
-                }
-                
-                await updateBalance();
-                await loadPlayerData(); // Load saved player data from database
-                updateButtonStates();
-            } catch (err) {
-                console.error('Wallet connection error:', err);
-                // Don't show alert for user rejection
-                if (err.message && (err.message.includes('User rejected') || err.message.includes('not been authorized'))) {
-                    console.log('User rejected wallet connection');
-                    return;
-                }
-                alert('Failed to connect wallet: ' + err.message);
-            }
-        });
-        
-        disconnectBtn.addEventListener('click', async () => {
-            if (window.solana && window.solana.disconnect) {
-                await window.solana.disconnect();
-            }
+        if (e.data.type === 'DISCONNECT_WALLET') {
+            if (window.solana && window.solana.disconnect) window.solana.disconnect().catch(function(){});
             wallet = null;
             connection = null;
             connectContainer.style.display = 'block';
@@ -366,16 +373,51 @@ async function setupWalletConnection() {
             totalWon = 0;
             updateDisplay();
             updateButtonStates();
+            try { window.parent.postMessage({ type: 'WALLET_DISCONNECTED' }, '*'); } catch (_) {}
+        }
+    });
+    
+    if (window.self !== window.top) {
+        try { window.parent.postMessage({ type: 'REQUEST_WALLET' }, '*'); } catch (_) {}
+    }
+    
+    if (isPhantomInstalled) {
+        try {
+            if (window.solana.isConnected) {
+                const resp = await window.solana.connect({ onlyIfTrusted: true });
+                if (resp) await applyWalletConnected(resp.publicKey.toString(), connectContainer, walletInfo, walletAddress);
+            }
+        } catch (err) {
+            console.log('Wallet not auto-connected:', err.message);
+        }
+        
+        connectBtn.addEventListener('click', async () => {
+            try {
+                const resp = await window.solana.connect({ onlyIfTrusted: false });
+                await applyWalletConnected(resp.publicKey.toString(), connectContainer, walletInfo, walletAddress);
+            } catch (err) {
+                console.error('Wallet connection error:', err);
+                if (err.message && (err.message.includes('User rejected') || err.message.includes('not been authorized'))) return;
+                showSlotsMessage({ title: 'Connection failed', message: 'Failed to connect wallet: ' + err.message, isError: true });
+            }
         });
-        window.addEventListener('message', function(e) {
-            if (e.data && e.data.type === 'CONNECT_WALLET' && connectBtn) connectBtn.click();
-            if (e.data && e.data.type === 'TOGGLE_MUSIC' && typeof window.toggleSlotsMusic === 'function') window.toggleSlotsMusic();
+        
+        disconnectBtn.addEventListener('click', async () => {
+            if (window.solana && window.solana.disconnect) await window.solana.disconnect();
+            wallet = null;
+            connection = null;
+            connectContainer.style.display = 'block';
+            walletInfo.style.display = 'none';
+            xmaBalance = 0;
+            spinsRemaining = 0;
+            totalWon = 0;
+            updateDisplay();
+            updateButtonStates();
+            try { window.parent.postMessage({ type: 'WALLET_DISCONNECTED' }, '*'); } catch (_) {}
         });
     } else {
         connectBtn.textContent = 'Install Phantom';
-        connectBtn.onclick = () => {
-            window.open('https://phantom.app/', '_blank');
-        };
+        connectBtn.onclick = function() { window.open('https://phantom.app/', '_blank'); };
     }
 }
 
@@ -393,7 +435,7 @@ async function updateBalance() {
         const { PublicKey } = window.solanaWeb3 || solanaWeb3;
         const { getAssociatedTokenAddress, getAccount } = window.splToken;
         
-        const tokenMint = new PublicKey(TOKEN_MINT);
+        const tokenMint = new PublicKey(getTokenMint());
         const userPublicKey = new PublicKey(wallet);
         
         const tokenAccount = await getAssociatedTokenAddress(
@@ -403,18 +445,17 @@ async function updateBalance() {
         
         try {
             const account = await getAccount(connection, tokenAccount);
-            xmaBalance = Number(account.amount) / Math.pow(10, TOKEN_DECIMALS);
+            xmaBalance = Number(account.amount) / Math.pow(10, getTokenDecimals());
         } catch (error) {
             // Token account doesn't exist yet or RPC error
-            const errorMsg = error.message || error.toString() || '';
+            const errorMsg = (error && (error.message || error.toString())) || '';
+            const isNotFound = errorMsg.includes('Invalid param') || errorMsg.includes('not found') || errorMsg.includes('could not find account') ||
+                errorMsg.includes('TokenAccountNotFoundError') || (error && error.name === 'TokenAccountNotFoundError');
             if (errorMsg.includes('403') || errorMsg.includes('429') || errorMsg.includes('rate limit') || errorMsg.includes('Too Many Requests')) {
                 console.warn('RPC rate limited. Balance may not update. For production, use a dedicated RPC service (Helius, QuickNode, etc.)');
-                // Keep current balance, don't reset to 0
-            } else if (errorMsg.includes('Invalid param') || errorMsg.includes('not found') || errorMsg.includes('could not find account')) {
-                // Token account doesn't exist yet
+            } else if (isNotFound) {
                 xmaBalance = 0;
             } else {
-                // Other error - log but don't reset balance
                 console.warn('Error fetching token account:', errorMsg);
             }
         }
@@ -455,7 +496,7 @@ function setupGameControls() {
 // Purchase Spins - Transfer tokens to treasury wallet
 async function purchaseSpins() {
     if (!wallet || !connection) {
-        alert('Please connect your wallet first');
+        showSlotsMessage({ title: 'Wallet required', message: 'Please connect your wallet first.', isError: true });
         return;
     }
     
@@ -463,15 +504,15 @@ async function purchaseSpins() {
     let numSpins = parseInt(document.getElementById('number-of-spins').value);
     
     if (!costPerSpin || costPerSpin <= 0 || !numSpins || numSpins <= 0) {
-        alert('Please enter valid cost per spin and number of spins');
+        showSlotsMessage({ title: 'Invalid input', message: 'Please enter valid cost per spin and number of spins.', isError: true });
         return;
     }
     if (costPerSpin > MAX_COST_PER_SPIN) {
-        alert(`Cost per spin is capped at ${MAX_COST_PER_SPIN.toLocaleString()} ${getTokenLabel()}`);
+        showSlotsMessage({ title: 'Cost capped', message: `Cost per spin is capped at ${MAX_COST_PER_SPIN.toLocaleString()} ${getTokenLabel()}.`, isError: true });
         return;
     }
     if (numSpins > MAX_SPINS_PER_PURCHASE) {
-        alert(`Maximum ${MAX_SPINS_PER_PURCHASE} spins per purchase`);
+        showSlotsMessage({ title: 'Limit', message: `Maximum ${MAX_SPINS_PER_PURCHASE} spins per purchase.`, isError: true });
         return;
     }
     costPerSpin = Math.min(costPerSpin, MAX_COST_PER_SPIN);
@@ -480,7 +521,7 @@ async function purchaseSpins() {
     const totalCost = costPerSpin * numSpins;
     
     if (xmaBalance < totalCost) {
-        alert(`Insufficient balance. You need ${totalCost} ${getTokenLabel()} but only have ${xmaBalance.toFixed(2)} ${getTokenLabel()}`);
+        showSlotsMessage({ title: 'Insufficient balance', message: `You need ${totalCost} ${getTokenLabel()} but only have ${xmaBalance.toFixed(2)} ${getTokenLabel()}.`, isError: true });
         return;
     }
     
@@ -488,21 +529,22 @@ async function purchaseSpins() {
     const solBalance = await connection.getBalance(new (window.solanaWeb3 || solanaWeb3).PublicKey(wallet));
         const minSolRequired = FEE_TREASURY_LAMPORTS + FEE_PARTNER_LAMPORTS + 10000; // fee + buffer for tx
     if (solBalance < minSolRequired) {
-        alert(`Insufficient SOL for transaction fee. Need ~${(minSolRequired / 1e9).toFixed(4)} SOL (includes ${PURCHASE_FEE_SOL} SOL purchase fee). You have ${(solBalance / 1e9).toFixed(4)} SOL.`);
+        showSlotsMessage({ title: 'Insufficient SOL', message: `Need ~${(minSolRequired / 1e9).toFixed(4)} SOL for transaction fee. You have ${(solBalance / 1e9).toFixed(4)} SOL.`, isError: true });
         return;
     }
     
     // Check if SPL token library is loaded
     if (!window.splToken) {
-        alert('SPL token library is still loading. Please wait a moment and try again.');
+        showSlotsMessage({ title: 'Loading', message: 'SPL token library is still loading. Please wait a moment and try again.', isError: true });
         return;
     }
     
     try {
         const { PublicKey, Transaction, SystemProgram } = window.solanaWeb3 || solanaWeb3;
         const { getAssociatedTokenAddress, createTransferInstruction } = window.splToken;
+        const createAssociatedTokenAccountInstruction = window.splToken.createAssociatedTokenAccountInstruction || window.splToken.createAssociatedTokenAccountIdempotentInstruction;
         
-        const tokenMint = new PublicKey(TOKEN_MINT);
+        const tokenMint = new PublicKey(getTokenMint());
         const userPublicKey = new PublicKey(wallet);
         const treasuryPublicKey = new PublicKey(TREASURY_WALLET);
         
@@ -517,28 +559,57 @@ async function purchaseSpins() {
             treasuryPublicKey
         );
         
+        // Ensure treasury has an ATA for this mint (transfer fails otherwise)
+        const treasuryAccountInfo = await connection.getAccountInfo(treasuryTokenAccount);
+        const transaction = new Transaction();
+        if (!treasuryAccountInfo) {
+            if (createAssociatedTokenAccountInstruction) {
+                // (payer, associatedToken, owner, mint) - user pays rent for treasury's ATA
+                transaction.add(createAssociatedTokenAccountInstruction(
+                    userPublicKey,
+                    treasuryTokenAccount,
+                    treasuryPublicKey,
+                    tokenMint
+                ));
+            } else {
+                try {
+                    const createAta = window.splToken.createAssociatedTokenAccount;
+                    if (createAta) {
+                        await createAta(connection, userPublicKey, tokenMint, treasuryPublicKey);
+                    }
+                } catch (e) {
+                    console.warn('Create ATA fallback:', e);
+                    throw new Error('Treasury token account does not exist. Please try again or contact support.');
+                }
+            }
+        }
+        
         // Token transfer instruction
-        const transferAmount = BigInt(Math.floor(totalCost * Math.pow(10, TOKEN_DECIMALS)));
+        const transferAmount = BigInt(Math.floor(totalCost * Math.pow(10, getTokenDecimals())));
         const transferInstruction = createTransferInstruction(
             userTokenAccount,
             treasuryTokenAccount,
             userPublicKey,
             transferAmount
         );
-        
-        // Create transaction (add split SOL fee)
-        const transaction = new Transaction().add(transferInstruction);
-        const partnerPublicKey = new PublicKey(FEE_PARTNER_WALLET);
-        transaction.add(SystemProgram.transfer({
-            fromPubkey: userPublicKey,
-            toPubkey: treasuryPublicKey,
-            lamports: FEE_TREASURY_LAMPORTS
-        }));
-        transaction.add(SystemProgram.transfer({
-            fromPubkey: userPublicKey,
-            toPubkey: partnerPublicKey,
-            lamports: FEE_PARTNER_LAMPORTS
-        }));
+        transaction.add(transferInstruction);
+        if (FEE_TREASURY_LAMPORTS > 0 || FEE_PARTNER_LAMPORTS > 0) {
+            const partnerPublicKey = new PublicKey(FEE_PARTNER_WALLET);
+            if (FEE_TREASURY_LAMPORTS > 0) {
+                transaction.add(SystemProgram.transfer({
+                    fromPubkey: userPublicKey,
+                    toPubkey: treasuryPublicKey,
+                    lamports: FEE_TREASURY_LAMPORTS
+                }));
+            }
+            if (FEE_PARTNER_LAMPORTS > 0) {
+                transaction.add(SystemProgram.transfer({
+                    fromPubkey: userPublicKey,
+                    toPubkey: partnerPublicKey,
+                    lamports: FEE_PARTNER_LAMPORTS
+                }));
+            }
+        }
         
         let blockhash;
         let retries = 3;
@@ -604,7 +675,8 @@ async function purchaseSpins() {
                     resultSymbols: [],
                     wonAmount: 0,
                     spinsPurchased: numSpins,
-                    gameType: 'slots'
+                    gameType: 'slots',
+                    tokenUsed: isBuxToken() ? 'bux' : 'knukl'
                 })
             });
             
@@ -625,7 +697,8 @@ async function purchaseSpins() {
         updateDisplay();
         updateButtonStates();
         
-        alert(`Successfully purchased ${numSpins} spin(s) for ${totalCost} ${getTokenLabel()}${PURCHASE_FEE_SOL > 0 ? ` + ${PURCHASE_FEE_SOL} SOL fee` : ''}.`);
+        const successMsg = `Successfully purchased ${numSpins} spin(s) for ${totalCost} ${getTokenLabel()}${PURCHASE_FEE_SOL > 0 ? ` + ${PURCHASE_FEE_SOL} SOL fee` : ''}.`;
+        showSlotsMessage({ title: 'Purchase complete', message: successMsg, txSignature: signature });
     } catch (error) {
         console.error('Purchase error:', error);
         const errorMsg = error.message || error.toString() || '';
@@ -636,8 +709,7 @@ async function purchaseSpins() {
             return;
         }
         
-        // Show error for other cases
-        alert('Failed to purchase spins: ' + errorMsg);
+        showSlotsMessage({ title: 'Purchase failed', message: 'Failed to purchase spins: ' + errorMsg, isError: true });
     }
 }
 
@@ -785,7 +857,8 @@ async function performSpin() {
                         resultSymbols: results,
                         wonAmount: winAmount,
                         updateSpinsRemaining: spinsRemaining,
-                        gameType: 'slots'
+                        gameType: 'slots',
+                        tokenUsed: isBuxToken() ? 'bux' : 'knukl'
                     })
                 });
                 
@@ -886,18 +959,18 @@ function calculateWin(results, bet) {
 // Uses backend API to get presigned transaction from treasury
 async function withdrawWinnings() {
     if (totalWon <= 0) {
-        alert('No winnings to withdraw');
+        showSlotsMessage({ title: 'No winnings', message: 'No winnings to withdraw.', isError: true });
         return;
     }
     
     if (!wallet || !connection) {
-        alert('Please connect your wallet');
+        showSlotsMessage({ title: 'Wallet required', message: 'Please connect your wallet.', isError: true });
         return;
     }
     
     // Check if SPL token library is loaded
     if (!window.splToken) {
-        alert('SPL token library is still loading. Please wait a moment and try again.');
+        showSlotsMessage({ title: 'Loading', message: 'SPL token library is still loading. Please wait a moment and try again.', isError: true });
         return;
     }
     
@@ -906,7 +979,7 @@ async function withdrawWinnings() {
         const { PublicKey } = window.solanaWeb3 || solanaWeb3;
         new PublicKey(wallet); // Will throw if invalid
     } catch (error) {
-        alert('Invalid wallet address');
+        showSlotsMessage({ title: 'Invalid wallet', message: 'Invalid wallet address.', isError: true });
         console.error('Invalid wallet address:', wallet);
         return;
     }
@@ -1279,7 +1352,11 @@ async function withdrawWinnings() {
         updateDisplay();
         updateButtonStates();
 
-        alert(`Successfully collected ${(actualAmount || amount).toLocaleString()} ${getTokenLabel()}! Your balance should update shortly.`);
+        showSlotsMessage({
+            title: 'Collect complete',
+            message: `Successfully collected ${(actualAmount || amount).toLocaleString()} ${getTokenLabel()}! Your balance should update shortly.`,
+            txSignature: signature
+        });
     } catch (error) {
         console.error('Withdrawal error:', error);
         const errorMsg = error.message || error.toString() || '';
@@ -1301,8 +1378,7 @@ async function withdrawWinnings() {
             console.error('Failed to reload player data after collect error:', loadError);
         }
         
-        // Show error for other cases
-        alert('Failed to collect winnings: ' + errorMsg);
+        showSlotsMessage({ title: 'Collect failed', message: 'Failed to collect winnings: ' + errorMsg, isError: true });
     } finally {
         // Always reset collecting flag and re-enable button
         isCollecting = false;
@@ -1383,11 +1459,10 @@ function setupBackgroundMusic() {
     
     if (!musicToggleBtn) return;
     
-    // Set initial state (music on by default). When off we keep showing same icon + corner X only.
-    musicToggleBtn.classList.add('active');
-    isMusicPlaying = true;
-    musicIconOn.style.display = 'block';
-    musicIconOff.style.display = 'none';
+    // Sync button to current isMusicPlaying (user may have toggled from parent before this ran)
+    musicToggleBtn.classList.toggle('active', isMusicPlaying);
+    if (musicIconOn) musicIconOn.style.display = 'block';
+    if (musicIconOff) musicIconOff.style.display = isMusicPlaying ? 'none' : 'block';
     
     // Function to update button visual state (off = same icon, corner X only via CSS)
     const updateButtonState = (playing) => {
@@ -1402,12 +1477,11 @@ function setupBackgroundMusic() {
         }
     };
     
-    // Try to play music immediately (may require user interaction on some browsers)
+    // Try to play music only if user has not turned it off (may require user interaction on some browsers)
     const playMusic = () => {
         if (backgroundMusic && isMusicPlaying) {
             backgroundMusic.play().catch(() => {
                 // Silently fail - autoplay is blocked by browser policy
-                // Music will start when user interacts with the page
             });
         }
     };
@@ -1561,9 +1635,9 @@ function updateButtonStates() {
     const spinBtn = document.getElementById('spin-button');
     const withdrawBtn = document.getElementById('withdraw-button');
     
-    // Enable purchase button when wallet is connected, but disable if spins remaining or collecting
-    purchaseBtn.disabled = !wallet || isCollecting || spinsRemaining > 0;
-    if (wallet && !isCollecting && spinsRemaining === 0) {
+    // Enable purchase only when wallet connected, no spins remaining, no uncollected prizes, and not collecting
+    purchaseBtn.disabled = !wallet || isCollecting || spinsRemaining > 0 || totalWon > 0;
+    if (wallet && !isCollecting && spinsRemaining === 0 && totalWon === 0) {
         purchaseBtn.style.opacity = '1';
         purchaseBtn.style.cursor = 'pointer';
     } else {
@@ -1621,16 +1695,13 @@ async function loadPlayerData() {
     if (!wallet) return;
     
     // Prevent duplicate simultaneous calls
-    if (isLoadingPlayerData) {
-        console.log('loadPlayerData: Already loading, skipping duplicate call');
-        return;
-    }
+    if (isLoadingPlayerData) return;
     
     isLoadingPlayerData = true;
     
     try {
         const response = await fetch(`/api/load-player?walletAddress=${encodeURIComponent(wallet)}&gameType=slots`, {
-            signal: AbortSignal.timeout(10000) // 10 second timeout
+            signal: AbortSignal.timeout(25000) // 25s for cold DB/API
         });
         
         if (!response.ok) {

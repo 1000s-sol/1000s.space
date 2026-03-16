@@ -1120,6 +1120,102 @@
     color: var(--text-primary);
 }
 
+/* Themed message modal (buy/collect success & errors) */
+.message-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 10001;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.message-modal.show {
+    display: flex;
+}
+
+.message-modal-content {
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+}
+
+.message-modal.success .message-modal-content {
+    border-color: var(--primary-color, #8b5cf6);
+    box-shadow: 0 0 0 1px var(--primary-color, #8b5cf6);
+}
+
+.message-modal.error .message-modal-content {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 1px #dc2626;
+}
+
+.message-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.message-modal.success .message-modal-header {
+    background: rgba(139, 92, 246, 0.12);
+}
+
+.message-modal.error .message-modal-header {
+    background: rgba(220, 38, 38, 0.12);
+}
+
+.message-modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.message-modal-body {
+    padding: 20px;
+}
+
+#message-modal-text {
+    margin: 0 0 12px;
+    color: var(--text-primary);
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.message-modal-tx-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--primary-color, #8b5cf6);
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.message-modal-tx-link:hover {
+    text-decoration: underline;
+}
+
+.message-modal-footer {
+    padding: 0 20px 20px;
+}
+
+.message-modal-footer .btn {
+    width: 100%;
+    padding: 12px 20px;
+}
+
 .prize-modal-content {
     background: var(--bg-primary);
     border-radius: 16px;

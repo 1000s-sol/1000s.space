@@ -281,6 +281,23 @@ body.slots-page .slot-machine-wrapper .controls-panel{align-self:end!important;p
         </div>
     </div>
 
+    <!-- Themed message modal (success/error for buy, collect, etc.) -->
+    <div id="message-modal" class="message-modal">
+        <div class="message-modal-content">
+            <div class="message-modal-header">
+                <h2 id="message-modal-title">Message</h2>
+                <button id="close-message-modal" class="close-modal-btn" type="button">&times;</button>
+            </div>
+            <div class="message-modal-body">
+                <p id="message-modal-text"></p>
+                <a id="message-modal-tx-link" class="message-modal-tx-link" href="#" target="_blank" rel="noopener noreferrer" style="display: none;">View transaction</a>
+            </div>
+            <div class="message-modal-footer">
+                <button id="message-modal-ok" class="btn btn-primary" type="button">OK</button>
+            </div>
+        </div>
+    </div>
+
     <script src="slots.js"></script>
 </body>
 </html>

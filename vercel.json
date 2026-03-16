@@ -18,6 +18,12 @@
     { "source": "/api/airdrop/x-unlink", "destination": "/api/index?__r=airdrop/x-unlink" },
     { "source": "/api/airdrop/x-status", "destination": "/api/index?__r=airdrop/x-status" },
     { "source": "/api/user/me", "destination": "/api/index?__r=user/me" },
-    { "source": "/api/user/link-wallet", "destination": "/api/index?__r=user/link-wallet" }
+    { "source": "/api/user/link-wallet", "destination": "/api/index?__r=user/link-wallet" },
+    { "source": "/api/load-player", "destination": "/api/index?__r=load-player" },
+    { "source": "/api/game-stats", "destination": "/api/index?__r=game-stats" },
+    { "source": "/api/leaderboard", "destination": "/api/index?__r=leaderboard" },
+    { "source": "/api/save-game", "destination": "/api/index?__r=save-game" },
+    { "source": "/api/collect", "destination": "/api/index?__r=collect" },
+    { "source": "/api/confirm-collect", "destination": "/api/index?__r=confirm-collect" }
   ]
 }
