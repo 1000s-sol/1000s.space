@@ -177,7 +177,7 @@ export function HomeSection({ onClaimClick }: HomeSectionProps) {
   );
 
   return (
-    <div className="relative w-full flex flex-col min-h-0 flex-1 overflow-visible home-section-root">
+    <div className="relative w-full flex flex-col min-h-0 min-[640px]:flex-1 overflow-visible home-section-root">
       <div className="absolute inset-0 min-h-full overflow-visible pointer-events-none" style={{ zIndex: 0 }} aria-hidden>
         {pairs.map((p) => {
           const pos = positions.get(p.id) ?? getFallbackPos(p.id);
@@ -197,13 +197,13 @@ export function HomeSection({ onClaimClick }: HomeSectionProps) {
         })}
       </div>
 
-      <header className="relative z-10 w-full flex flex-col items-center gap-1 min-[640px]:gap-2 pt-0 min-[640px]:pt-0 px-2 min-[640px]:px-4 flex-shrink-0">
-        {/* Row 1: [image, title, image]; Row 2: tagline — images closer to title on mobile (gap-1.5) */}
+      <header className="relative z-10 w-full flex flex-col items-center gap-1.5 min-[640px]:gap-2 pt-0 pb-3 min-[640px]:pb-0 px-2 min-[640px]:px-4 flex-shrink-0">
+        {/* Row 1: [image, title, image]; Row 2: tagline */}
         <div className="flex flex-row items-center justify-center gap-3 min-[640px]:gap-6 w-full min-[640px]:w-auto">
           <div
             className="aspect-square rounded-full overflow-hidden flex-shrink-0"
             style={{
-              width: "clamp(56px, 14vw, 140px)",
+              width: "clamp(52px, 13vw, 140px)",
               WebkitMaskImage: "radial-gradient(ellipse 70% 70% at 50% 50%, black 35%, transparent 75%)",
               maskImage: "radial-gradient(ellipse 70% 70% at 50% 50%, black 35%, transparent 75%)",
             }}
@@ -211,17 +211,17 @@ export function HomeSection({ onClaimClick }: HomeSectionProps) {
           >
             <img src={ARCHIVE_ARTWORK[2]} alt="" className="w-full h-full object-cover" loading="eager" decoding="async" />
           </div>
-          <div className="flex-shrink-0 py-5 min-[640px]:py-6">
+          <div className="flex-shrink-0 py-3 min-[640px]:py-6">
             <div
               className="flex items-center justify-center overflow-hidden"
-              style={{ height: "clamp(56px, 14vw, 140px)", width: "clamp(140px, 34vw, 340px)" }}
+              style={{ height: "clamp(64px, 16vw, 140px)", width: "clamp(140px, 34vw, 340px)" }}
             >
               <img
                 src="/images/1000s-logo.png"
                 alt="1000s"
                 className="select-none object-contain max-w-none"
                 style={{
-                  height: "clamp(88px, 22vw, 220px)",
+                  height: "clamp(72px, 18vw, 220px)",
                   width: "auto",
                   transform: "scale(1.5)",
                 }}
@@ -231,7 +231,7 @@ export function HomeSection({ onClaimClick }: HomeSectionProps) {
           <div
             className="aspect-square rounded-full overflow-hidden flex-shrink-0"
             style={{
-              width: "clamp(56px, 14vw, 140px)",
+              width: "clamp(52px, 13vw, 140px)",
               WebkitMaskImage: "radial-gradient(ellipse 70% 70% at 50% 50%, black 35%, transparent 75%)",
               maskImage: "radial-gradient(ellipse 70% 70% at 50% 50%, black 35%, transparent 75%)",
             }}
@@ -244,7 +244,7 @@ export function HomeSection({ onClaimClick }: HomeSectionProps) {
           className="tracking-wide text-center font-normal"
           style={{
             fontFamily: "var(--font-bitcount), system-ui, sans-serif",
-            fontSize: "clamp(1.125rem, 3.5vw, 1.5rem)",
+            fontSize: "clamp(1rem, 3vw, 1.5rem)",
             color: "transparent",
             background: "#9ca3af",
             WebkitBackgroundClip: "text",
@@ -257,19 +257,19 @@ export function HomeSection({ onClaimClick }: HomeSectionProps) {
         </p>
       </header>
 
-      <section className="relative z-10 w-full flex-1 flex flex-col justify-center min-[640px]:justify-start min-[640px]:flex-initial px-2 sm:px-0 py-6 min-[640px]:py-8 home-section-cards-area min-h-0 min-[640px]:min-h-[calc(100vh-12rem)]">
-        <div className="grid grid-cols-2 min-[640px]:grid-cols-2 gap-6 min-[640px]:gap-8 w-full max-w-5xl mx-auto items-center">
+      <section className="relative z-10 w-full flex flex-col px-2 sm:px-0 py-4 min-[640px]:py-8 home-section-cards-area min-[640px]:min-h-[calc(100vh-12rem)]">
+        <div className="grid grid-cols-2 gap-4 min-[640px]:gap-8 w-full max-w-5xl mx-auto min-[640px]:items-center">
           <div className="col-span-2 min-[640px]:col-span-1 home-section-text-card rounded-2xl border border-[var(--dashboard-border)] p-4 min-[640px]:p-6 text-left shadow-[0_4px_24px_rgba(0,0,0,0.35)] flex flex-col justify-center">
             <div className="flex gap-3">
               <Info className="flex-shrink-0 size-5 mt-0.5 text-[var(--dashboard-accent)]" aria-hidden />
-              <p className="text-[var(--dashboard-text)] text-[15px] min-[640px]:text-base leading-relaxed">
+              <p className="text-[var(--dashboard-text)] text-sm min-[640px]:text-base leading-relaxed">
                 1000s is a web3 art and gaming community. Holders of our digital collectibles can earn daily rewards through passive holding, community engagement and by playing on our custom built gaming platforms.
               </p>
             </div>
           </div>
-          <div className="flex items-center justify-center min-h-[140px] min-[640px]:min-h-[260px]" aria-hidden>
+          <div className="flex items-center justify-center min-h-[100px] min-[640px]:min-h-[260px]" aria-hidden>
             <div
-              className="w-full max-w-[140px] min-[640px]:max-w-[280px] aspect-square rounded-full overflow-hidden"
+              className="w-full max-w-[100px] min-[640px]:max-w-[280px] aspect-square rounded-full overflow-hidden"
               style={{
                 WebkitMaskImage: "radial-gradient(ellipse 70% 70% at 50% 50%, black 35%, transparent 75%)",
                 maskImage: "radial-gradient(ellipse 70% 70% at 50% 50%, black 35%, transparent 75%)",
@@ -278,9 +278,9 @@ export function HomeSection({ onClaimClick }: HomeSectionProps) {
               <img src={ARCHIVE_ARTWORK[0]} alt="" className="w-full h-full object-cover" loading="eager" decoding="async" />
             </div>
           </div>
-          <div className="flex items-center justify-center min-h-[140px] min-[640px]:min-h-[260px]" aria-hidden>
+          <div className="flex items-center justify-center min-h-[100px] min-[640px]:min-h-[260px]" aria-hidden>
             <div
-              className="w-full max-w-[140px] min-[640px]:max-w-[280px] aspect-square rounded-full overflow-hidden"
+              className="w-full max-w-[100px] min-[640px]:max-w-[280px] aspect-square rounded-full overflow-hidden"
               style={{
                 WebkitMaskImage: "radial-gradient(ellipse 70% 70% at 50% 50%, black 35%, transparent 75%)",
                 maskImage: "radial-gradient(ellipse 70% 70% at 50% 50%, black 35%, transparent 75%)",
@@ -290,7 +290,7 @@ export function HomeSection({ onClaimClick }: HomeSectionProps) {
             </div>
           </div>
           <div className="col-span-2 min-[640px]:col-span-1 home-section-text-card rounded-2xl border border-[var(--dashboard-border)] p-4 min-[640px]:p-6 text-left shadow-[0_4px_24px_rgba(0,0,0,0.35)] flex flex-col justify-center">
-            <p className="text-amber-400/95 text-[15px] min-[640px]:text-base leading-relaxed">
+            <p className="text-amber-400/95 text-sm min-[640px]:text-base leading-relaxed">
               Our flagship art collection and token launch is scheduled for Q4 2026. Find out how you can secure and maximise your FREE token allocation today.
             </p>
             <button

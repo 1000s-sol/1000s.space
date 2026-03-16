@@ -47,7 +47,7 @@ function App() {
         <AirdropSection />
       </div>
     ) : activeMenu === "casino" ? (
-      <div className="w-full max-w-4xl flex-1 min-h-0 flex flex-col rounded-2xl border-2 border-[var(--dashboard-border)] p-6 shadow-[inset_0_1px_0_var(--dashboard-border-light),0_4px_24px_rgba(0,0,0,0.25)]" style={{ background: 'var(--dashboard-card)' }}>
+      <div className="w-full max-w-4xl flex-1 min-h-0 flex flex-col rounded-2xl border-2 border-[var(--dashboard-border)] p-6 shadow-[inset_0_1px_0_var(--dashboard-border-light),0_4px_24px_rgba(0,0,0,0.25)] overflow-auto" style={{ background: 'var(--dashboard-card)' }}>
         <h1 className="text-3xl min-[840px]:text-4xl font-semibold text-white mb-4 text-center flex-shrink-0">
           {MENU_TITLES[activeMenu]}
         </h1>

@@ -496,6 +496,57 @@ export function Dashboard({
                     Login with Discord
                   </a>
                 )}
+                <div className="flex flex-col gap-1.5">
+                  {(discordConnected || walletConnected) ? (
+                    xLinked ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const body = discordId ? { discordId } : { walletAddress: walletAddress ?? "" };
+                          fetch("/api/airdrop/x-unlink", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(body),
+                          })
+                            .then((r) => r.json())
+                            .then((data) => {
+                              if (data.success && data.unlinked) {
+                                setXLinked(false);
+                                setXUsername(null);
+                              }
+                            })
+                            .catch(() => {});
+                        }}
+                        className="flex items-center justify-center gap-3 w-full px-5 py-3.5 rounded-xl text-base font-medium border-2 border-[var(--dashboard-border)] bg-[var(--dashboard-surface)] text-[var(--dashboard-text)] hover:border-[var(--dashboard-accent)]/60 transition-all"
+                      >
+                        <XIcon className="flex-shrink-0 size-5" />
+                        <span className="min-w-0 truncate">{xUsername ?? "X connected"}</span>
+                        <LogOut className="flex-shrink-0 size-5 text-[var(--dashboard-muted)]" aria-hidden />
+                      </button>
+                    ) : (
+                      <a
+                        href={discordId ? `/api/airdrop/x-auth?discordId=${encodeURIComponent(discordId)}` : `/api/airdrop/x-auth?walletAddress=${encodeURIComponent(walletAddress ?? "")}`}
+                        className="flex items-center justify-center gap-3 w-full px-5 py-3.5 rounded-xl text-base font-medium border-2 border-[#1da1f2]/60 bg-[#1da1f2]/20 text-white hover:border-[#1da1f2] hover:bg-[#1da1f2]/30 transition-all"
+                      >
+                        <XIcon className="flex-shrink-0 size-5" />
+                        Connect X
+                      </a>
+                    )
+                  ) : (
+                    <div
+                      className="flex items-center justify-center gap-3 w-full px-5 py-3.5 rounded-xl text-base font-medium border-2 border-[var(--dashboard-border)] bg-[var(--dashboard-surface)] text-[var(--dashboard-muted)] cursor-not-allowed"
+                      title="Log in with Discord or connect wallet to link X"
+                    >
+                      <XIcon className="flex-shrink-0 size-5" />
+                      Connect X
+                    </div>
+                  )}
+                  {!(discordConnected || walletConnected) && (
+                    <p className="text-xs text-[var(--dashboard-muted)] text-center px-1">
+                      Log in or connect wallet to link
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </>

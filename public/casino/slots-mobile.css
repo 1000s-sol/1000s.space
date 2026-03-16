@@ -37,10 +37,47 @@
     body.slots-page .slot-machine-wrapper .controls-panel {
         align-self: end !important;
         overflow: visible !important;
-        padding: 4px 6px 0 !important;
-        padding-bottom: 0 !important;
+        padding: 2px 4px 2px !important;
         flex: none !important;
         min-height: 0 !important;
         height: auto !important;
+        gap: 2px !important;
+        grid-template-rows: auto auto !important;
+    }
+    /* Shrink inputs row so stats panel has more room */
+    body.slots-page .slot-machine-wrapper .controls-panel .inputs-row {
+        gap: 2px !important;
+    }
+    body.slots-page .slot-machine-wrapper .controls-panel .control-group {
+        gap: 2px !important;
+        padding: 1px !important;
+    }
+    body.slots-page .slot-machine-wrapper .controls-panel .control-group label {
+        font-size: 10px !important;
+        line-height: 1 !important;
+    }
+    body.slots-page .slot-machine-wrapper .controls-panel .control-group input,
+    body.slots-page .slot-machine-wrapper .controls-panel .control-group select.control-select {
+        padding: 3px 4px !important;
+        font-size: 12px !important;
+        min-height: 0 !important;
+    }
+    body.slots-page .slot-machine-wrapper .controls-panel .control-group select.control-select {
+        padding-right: 20px !important;
+        background-position: right 4px center !important;
+    }
+    /* Shrink action buttons to make room for stats panel */
+    body.slots-page .slot-machine-wrapper .controls-panel .btn,
+    body.slots-page .slot-machine-wrapper .controls-panel .btn-spin {
+        padding: 2px 4px !important;
+        font-size: 11px !important;
+        line-height: 1.1 !important;
+    }
+    body.slots-page .slot-machine-wrapper .controls-panel .btn-spin {
+        font-size: 13px !important;
+    }
+    body.slots-page .slot-machine-wrapper .controls-panel .spin-button-subtitle {
+        font-size: 0.55em !important;
+        margin-top: 0 !important;
     }
 }
