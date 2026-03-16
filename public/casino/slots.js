@@ -40,13 +40,11 @@ const SLOT_MACHINE_PROGRAM_ID = 'Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'; 
 // Token mints: BUX (1000s) and KNUKL — must match the token selected via ?token=bux
 const BUX_TOKEN_MINT = 'AaKrMsZkuAdJL6TKZbj7X1VaH5qWioL7oDHagQZa1w59';
 const KNUKL_TOKEN_MINT = '6sYhJZDwqHpv1shyVeZ91tx8QYSiHJh2bio97Qdhq1br';
-const TREASURY_WALLET = '6auNHk39Mut82FhjY9iBZXjqm7xJabFVrY3bVgrYSMvj'; // Treasury wallet address
+const TREASURY_WALLET = '9M7Jqyqasd2SYxXPsLCW32wUsZ8NE9iY5LL2mw2PbHpL'; // Treasury wallet (receives token + 0.002 SOL fee)
 const BUX_DECIMALS = 9;
 const KNUKL_DECIMALS = 6;
-const PURCHASE_FEE_SOL = 0; // Disabled for testing. Was: 0.002 (0.0012 treasury, 0.0008 partner)
-const FEE_TREASURY_LAMPORTS = 0;   // 0.0012 SOL -> treasury when enabled
-const FEE_PARTNER_LAMPORTS = 0;    // 0.0008 SOL -> partner when enabled
-const FEE_PARTNER_WALLET = '3WNHW6sr1sQdbRjovhPrxgEJdWASZ43egGWMMNrhgoRR';
+const PURCHASE_FEE_SOL = 0.002; // SOL fee per purchase (all to treasury)
+const FEE_TREASURY_LAMPORTS = 2_000_000; // 0.002 SOL -> treasury
 
 function isBuxToken() {
     return typeof window.__SLOTS_TOKEN__ !== 'undefined' && window.__SLOTS_TOKEN__ === 'bux';
@@ -527,7 +525,7 @@ async function purchaseSpins() {
     
     // Check user has enough SOL for purchase fee (0.002 SOL) + tx fee
     const solBalance = await connection.getBalance(new (window.solanaWeb3 || solanaWeb3).PublicKey(wallet));
-        const minSolRequired = FEE_TREASURY_LAMPORTS + FEE_PARTNER_LAMPORTS + 10000; // fee + buffer for tx
+        const minSolRequired = FEE_TREASURY_LAMPORTS + 10000; // fee + buffer for tx
     if (solBalance < minSolRequired) {
         showSlotsMessage({ title: 'Insufficient SOL', message: `Need ~${(minSolRequired / 1e9).toFixed(4)} SOL for transaction fee. You have ${(solBalance / 1e9).toFixed(4)} SOL.`, isError: true });
         return;
@@ -593,22 +591,12 @@ async function purchaseSpins() {
             transferAmount
         );
         transaction.add(transferInstruction);
-        if (FEE_TREASURY_LAMPORTS > 0 || FEE_PARTNER_LAMPORTS > 0) {
-            const partnerPublicKey = new PublicKey(FEE_PARTNER_WALLET);
-            if (FEE_TREASURY_LAMPORTS > 0) {
-                transaction.add(SystemProgram.transfer({
-                    fromPubkey: userPublicKey,
-                    toPubkey: treasuryPublicKey,
-                    lamports: FEE_TREASURY_LAMPORTS
-                }));
-            }
-            if (FEE_PARTNER_LAMPORTS > 0) {
-                transaction.add(SystemProgram.transfer({
-                    fromPubkey: userPublicKey,
-                    toPubkey: partnerPublicKey,
-                    lamports: FEE_PARTNER_LAMPORTS
-                }));
-            }
+        if (FEE_TREASURY_LAMPORTS > 0) {
+            transaction.add(SystemProgram.transfer({
+                fromPubkey: userPublicKey,
+                toPubkey: treasuryPublicKey,
+                lamports: FEE_TREASURY_LAMPORTS
+            }));
         }
         
         let blockhash;
