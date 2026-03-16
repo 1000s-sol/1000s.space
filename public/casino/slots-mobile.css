@@ -17,7 +17,7 @@
     }
     body.slots-page .slot-machine-wrapper {
         display: grid !important;
-        grid-template-rows: 1fr 1fr auto !important;
+        grid-template-rows: 1fr 0.65fr auto !important;
         flex-direction: row !important;
         gap: 2px !important;
         width: 100% !important;
@@ -37,11 +37,11 @@
     body.slots-page .slot-machine-wrapper .controls-panel {
         align-self: end !important;
         overflow: visible !important;
-        padding: 2px 4px 2px !important;
+        padding: 4px 6px 4px !important;
         flex: none !important;
         min-height: 0 !important;
         height: auto !important;
-        gap: 2px !important;
+        gap: 4px !important;
         grid-template-rows: auto auto !important;
     }
     /* Shrink inputs row so stats panel has more room */
@@ -58,26 +58,33 @@
     }
     body.slots-page .slot-machine-wrapper .controls-panel .control-group input,
     body.slots-page .slot-machine-wrapper .controls-panel .control-group select.control-select {
-        padding: 3px 4px !important;
-        font-size: 12px !important;
-        min-height: 0 !important;
+        padding: 5px 6px !important;
+        font-size: 13px !important;
+        min-height: 28px !important;
     }
     body.slots-page .slot-machine-wrapper .controls-panel .control-group select.control-select {
         padding-right: 20px !important;
         background-position: right 4px center !important;
     }
-    /* Shrink action buttons to make room for stats panel */
+    /* Action buttons: slightly taller, larger font */
     body.slots-page .slot-machine-wrapper .controls-panel .btn,
     body.slots-page .slot-machine-wrapper .controls-panel .btn-spin {
-        padding: 2px 4px !important;
-        font-size: 11px !important;
-        line-height: 1.1 !important;
+        padding: 6px 8px !important;
+        font-size: 13px !important;
+        line-height: 1.15 !important;
+        min-height: 36px !important;
     }
     body.slots-page .slot-machine-wrapper .controls-panel .btn-spin {
-        font-size: 13px !important;
+        font-size: 16px !important;
     }
     body.slots-page .slot-machine-wrapper .controls-panel .spin-button-subtitle {
-        font-size: 0.55em !important;
-        margin-top: 0 !important;
+        font-size: 0.5em !important;
+        margin-top: -2px !important;
+        line-height: 1 !important;
+    }
+    /* Win % button: smaller font on mobile */
+    body.slots-page .slot-machine-wrapper .game-stats-bar .stat-item-buttons button,
+    body.slots-page .slot-machine-wrapper .game-stats-bar .btn-win-percent-desktop {
+        font-size: 9px !important;
     }
 }
