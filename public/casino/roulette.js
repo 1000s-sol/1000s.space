@@ -204,6 +204,7 @@
         renderChipStacks();
         updateUndoButton();
         updateReplaceButton();
+        updateRouletteButtonStates();
     }
 
     function undoLastBet() {
@@ -219,6 +220,7 @@
         renderChipStacks();
         updateUndoButton();
         updateReplaceButton();
+        updateRouletteButtonStates();
     }
 
     function updateUndoButton() {
@@ -274,6 +276,7 @@
         renderChipStacks();
         updateUndoButton();
         updateReplaceButton();
+        updateRouletteButtonStates();
     }
 
     function copyBets(src) {
