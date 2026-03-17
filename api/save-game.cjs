@@ -191,12 +191,14 @@ async function handler(req, res) {
 
     if (!existingPlayer) {
       created_at = now;
-      total_spins = 1;
-      total_wagered = BigInt(Math.floor((spinCost || 0) * 1e6)).toString();
-      total_won = BigInt(Math.floor((wonAmount || 0) * 1e6)).toString();
-      unclaimed_rewards = updateUnclaimedRewards
+      const isPurchase = spinsPurchased !== undefined && spinsPurchased > 0;
+      const didSpin = !isPurchase && Array.isArray(resultSymbols) && resultSymbols.length > 0;
+      total_spins = didSpin ? 1 : 0;
+      total_wagered = didSpin ? BigInt(Math.floor((spinCost || 0) * 1e6)).toString() : "0";
+      total_won = didSpin ? BigInt(Math.floor((wonAmount || 0) * 1e6)).toString() : "0";
+      unclaimed_rewards = updateUnclaimedRewards !== undefined
         ? BigInt(Math.floor(updateUnclaimedRewards * 1e6)).toString()
-        : BigInt(Math.floor((wonAmount || 0) * 1e6)).toString();
+        : (didSpin ? BigInt(Math.floor((wonAmount || 0) * 1e6)).toString() : "0");
       spins_remaining = spinsPurchased !== undefined && spinsPurchased > 0 ? spinsPurchased : 0;
       cost_per_spin = spinCost && spinCost > 0 ? Math.floor(spinCost) : 100;
 
