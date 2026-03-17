@@ -372,14 +372,12 @@ async function doFlip() {
 
   const coinImage = document.getElementById('coin-image');
   if (coinImage) {
+    coinImage.src = getCoinImagePath(result);
     coinImage.classList.add('coin-spinning');
   }
 
   setTimeout(() => {
-    if (coinImage) {
-      coinImage.classList.remove('coin-spinning');
-      coinImage.src = getCoinImagePath(result);
-    }
+    if (coinImage) coinImage.classList.remove('coin-spinning');
 
     const resultEl = document.getElementById('flip-result');
     const resultMsg = document.getElementById('flip-result-message');
