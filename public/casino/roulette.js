@@ -742,7 +742,7 @@
                 return fetch('/api/collect', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userWallet: wallet, amount: totalToCollectAmount, gameType: 'roulette', tokenUsed: isBuxToken() ? 'bux' : 'knukl' })
+                    body: JSON.stringify({ userWallet: wallet, amount: totalToCollectAmount, gameType: 'roulette', token: isBuxToken() ? 'bux' : 'knukl' })
                 });
             })
             .then(function (res) {
