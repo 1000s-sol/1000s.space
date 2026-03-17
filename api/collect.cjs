@@ -42,7 +42,9 @@ async function handler(req, res) {
   if (req.method !== "POST") return json(res, 405, { error: "Method not allowed" });
 
   try {
-    let { userWallet, amount: amountRaw, token = "knukl", gameType = "slots" } = req.body;
+    let { userWallet, amount: amountRaw, gameType = "slots" } = req.body;
+    let token = (req.body.token || req.body.tokenUsed || "knukl").toString().toLowerCase();
+    if (token !== "bux") token = "knukl";
     let amount = amountRaw != null ? Number(amountRaw) : NaN;
     const gameTypeNorm = (gameType || "slots").toLowerCase();
     if (gameTypeNorm !== "slots" && gameTypeNorm !== "coinflip" && gameTypeNorm !== "roulette") {
@@ -63,22 +65,19 @@ async function handler(req, res) {
       return json(res, 429, { error: "Too many requests. Please wait before trying again." });
     }
 
-    const { mint: TOKEN_MINT, decimals: TOKEN_DECIMALS } = getTokenMintAndDecimals(token);
-    if (!TOKEN_MINT) {
-      return json(res, 500, { error: "Token not configured", message: `Missing ${token === "bux" ? "BUX_TOKEN_MINT" : "KNUKL_TOKEN_MINT"} in env` });
-    }
-
     if (sql) {
       const dbDecimals = 6;
       let playerData, dbUnclaimed;
       if (gameTypeNorm === "coinflip") {
-        const rows = await sql`SELECT unclaimed_rewards FROM coinflip_players WHERE wallet_address = ${userWallet}`;
+        const rows = await sql`SELECT unclaimed_rewards, token_used FROM coinflip_players WHERE wallet_address = ${userWallet}`;
         playerData = rows[0];
         dbUnclaimed = playerData ? Number(playerData.unclaimed_rewards || 0) / Math.pow(10, dbDecimals) : 0;
+        if (playerData && playerData.token_used) token = String(playerData.token_used).toLowerCase() === "bux" ? "bux" : "knukl";
       } else if (gameTypeNorm === "roulette") {
-        const rows = await sql`SELECT unclaimed_rewards FROM roulette_players WHERE wallet_address = ${userWallet}`;
+        const rows = await sql`SELECT unclaimed_rewards, token_used FROM roulette_players WHERE wallet_address = ${userWallet}`;
         playerData = rows[0];
         dbUnclaimed = playerData ? Number(playerData.unclaimed_rewards || 0) / Math.pow(10, dbDecimals) : 0;
+        if (playerData && playerData.token_used) token = String(playerData.token_used).toLowerCase() === "bux" ? "bux" : "knukl";
       } else {
         const rows = await sql`SELECT unclaimed_rewards FROM slots_players WHERE wallet_address = ${userWallet}`;
         playerData = rows[0];
@@ -88,6 +87,11 @@ async function handler(req, res) {
         return json(res, 400, { error: "No unclaimed rewards available", actualAmount: 0 });
       }
       if (Math.abs(dbUnclaimed - amount) > 0.000001) amount = dbUnclaimed;
+    }
+
+    const { mint: TOKEN_MINT, decimals: TOKEN_DECIMALS } = getTokenMintAndDecimals(token);
+    if (!TOKEN_MINT) {
+      return json(res, 500, { error: "Token not configured", message: `Missing ${token === "bux" ? "BUX_TOKEN_MINT" : "KNUKL_TOKEN_MINT"} in env` });
     }
 
     const treasuryPrivateKey = process.env.TREASURY_PRIVATE_KEY;
