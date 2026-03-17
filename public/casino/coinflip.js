@@ -427,6 +427,11 @@ async function doFlip() {
         updateUnclaimedRewards: totalWon,
         tokenUsed: isBuxToken() ? 'bux' : 'knukl'
       })
+    }).then((res) => {
+      if (res && res.ok) {
+        loadGameStats();
+        loadLeaderboard('flips');
+      }
     }).catch(() => {});
 
     updateDisplay();
