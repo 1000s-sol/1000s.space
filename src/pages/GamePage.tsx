@@ -78,13 +78,14 @@ export function GamePage() {
       if (e.data?.type === "WALLET_DISCONNECTED") {
         setSlotsWalletAddress(null);
       }
-      if (e.data?.type === "REQUEST_WALLET" && mainWalletAddress && e.source) {
-        (e.source as Window).postMessage({ type: "WALLET_ADDRESS", address: mainWalletAddress }, "*");
+      if (e.data?.type === "REQUEST_WALLET" && e.source) {
+        const addr = mainWalletAddress || slotsWalletAddress;
+        if (addr) (e.source as Window).postMessage({ type: "WALLET_ADDRESS", address: addr }, "*");
       }
     };
     window.addEventListener("message", handler);
     return () => window.removeEventListener("message", handler);
-  }, [mainWalletAddress]);
+  }, [mainWalletAddress, slotsWalletAddress]);
 
   const handleConnectWallet = () => {
     try {
