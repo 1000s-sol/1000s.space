@@ -120,7 +120,7 @@
 
     function updateToCollectUI() {
         var el = document.getElementById('roulette-to-collect');
-        if (el) el.textContent = Math.floor(unclaimedRewards);
+        if (el) el.textContent = Math.floor(unclaimedRewards) + ' ' + getTokenLabel();
     }
 
     function renderChipStacks() {
@@ -451,7 +451,7 @@
         if (!btn) return;
         btn.addEventListener('click', function () {
             if (btn.disabled) return;
-            if (chipBalance <= 0) return;
+            if (getTotalStaked() <= 0) return;
             btn.disabled = true;
             spinInProgress = true;
             userClickedChipYet = false;
@@ -525,7 +525,7 @@
             else buyEnabled = true;
         }
         if (buyBtn) buyBtn.disabled = !buyEnabled;
-        if (spinBtn) spinBtn.disabled = !spinEnabled || spinInProgress;
+        if (spinBtn) spinBtn.disabled = totalStaked <= 0 || !spinEnabled || spinInProgress;
         if (collectBtn) collectBtn.disabled = !collectEnabled;
     }
 
