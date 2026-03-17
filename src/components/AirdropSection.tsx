@@ -77,6 +77,10 @@ type XFollowedAccount = { username: string; followed: boolean };
 
 type AllocationData = {
   allocations: { archive: number; casino: number; x: number; discord: number };
+  casinoBreakdown?: {
+    knukl: { slots: number; coinflip: number; roulette: number };
+    bux: { slots: number; coinflip: number; roulette: number };
+  };
   archiveBreakdown?: ArchiveBreakdownItem[];
   xFollowedAccounts?: XFollowedAccount[];
   xEngagement?: { likedCount: number; repostedCount: number; mentionedCount: number; allocation: number; repostUnavailable?: boolean };
@@ -94,6 +98,7 @@ export function AirdropSection() {
   const [claimError, setClaimError] = useState<string | null>(null);
   const [archiveExpanded, setArchiveExpanded] = useState(false);
   const [xExpanded, setXExpanded] = useState(false);
+  const [casinoExpanded, setCasinoExpanded] = useState(false);
   useEffect(() => {
     if (!walletAddress) {
       setAllocation(null);
@@ -138,6 +143,7 @@ export function AirdropSection() {
       }
       setAllocation({
         allocations: (data.allocations as AllocationData["allocations"]) ?? { archive: 0, casino: 0, x: 0, discord: 0 },
+        casinoBreakdown: data.casinoBreakdown as AllocationData["casinoBreakdown"] | undefined,
         archiveBreakdown: (data.archiveBreakdown as AllocationData["archiveBreakdown"]) ?? [],
         xFollowedAccounts: (data.xFollowedAccounts as AllocationData["xFollowedAccounts"]) ?? [],
         xEngagement: data.xEngagement as AllocationData["xEngagement"] | undefined,
@@ -166,8 +172,8 @@ export function AirdropSection() {
     },
     {
       id: "casino",
-      label: "Casino play (previous day)",
-      description: "Activity from yesterday on Slotto.gg",
+      label: "Casino play (previous 24h)",
+      description: "Based on slots/coinflip/roulette play in the last 24 hours",
       icon: <Dices className="size-5 text-[var(--dashboard-accent)]" aria-hidden />,
       value: allocation?.allocations.casino ?? 0,
     },
@@ -286,6 +292,55 @@ export function AirdropSection() {
                   {archiveExpanded && (!allocation?.archiveBreakdown?.length) && !allocationLoading && (
                     <div className="border-t border-[var(--dashboard-border)] bg-black/20 px-4 py-3 text-sm text-[var(--dashboard-muted)]">
                       No archive NFTs in eligible collections.
+                    </div>
+                  )}
+                </>
+              ) : row.id === "casino" ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setCasinoExpanded((e) => !e)}
+                    className="flex items-center gap-4 p-4 w-full text-left hover:bg-white/[0.03] transition-colors"
+                  >
+                    <div className="flex-shrink-0">{row.icon}</div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-white">{row.label}</p>
+                      <p className="text-xs text-[var(--dashboard-muted)] mt-0.5">{row.description}</p>
+                    </div>
+                    <div className="flex flex-shrink-0 items-center gap-2">
+                      <span className="text-lg font-semibold tabular-nums text-white">
+                        {allocationLoading ? "…" : (walletConnected ? row.value : 0)}
+                      </span>
+                      {casinoExpanded ? (
+                        <ChevronDown className="size-5 text-[var(--dashboard-muted)]" aria-hidden />
+                      ) : (
+                        <ChevronRight className="size-5 text-[var(--dashboard-muted)]" aria-hidden />
+                      )}
+                    </div>
+                  </button>
+                  {casinoExpanded && allocation?.casinoBreakdown && (
+                    <div className="border-t border-[var(--dashboard-border)] bg-black/20 px-4 py-3">
+                      <p className="text-xs font-medium text-[var(--dashboard-muted)] mb-2">
+                        Base 10 per game played + 10 per 500 tokens spent (per token)
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                        <div className="rounded-lg border border-[var(--dashboard-border)] bg-black/20 p-3">
+                          <p className="text-xs font-semibold text-white mb-2">KNUKL</p>
+                          <ul className="space-y-1">
+                            <li className="flex items-center justify-between gap-3"><span className="text-[var(--dashboard-text)]">Slots</span><span className="font-medium tabular-nums text-white">{allocation.casinoBreakdown.knukl.slots}</span></li>
+                            <li className="flex items-center justify-between gap-3"><span className="text-[var(--dashboard-text)]">Coin flip</span><span className="font-medium tabular-nums text-white">{allocation.casinoBreakdown.knukl.coinflip}</span></li>
+                            <li className="flex items-center justify-between gap-3"><span className="text-[var(--dashboard-text)]">Roulette</span><span className="font-medium tabular-nums text-white">{allocation.casinoBreakdown.knukl.roulette}</span></li>
+                          </ul>
+                        </div>
+                        <div className="rounded-lg border border-[var(--dashboard-border)] bg-black/20 p-3">
+                          <p className="text-xs font-semibold text-white mb-2">BUX</p>
+                          <ul className="space-y-1">
+                            <li className="flex items-center justify-between gap-3"><span className="text-[var(--dashboard-text)]">Slots</span><span className="font-medium tabular-nums text-white">{allocation.casinoBreakdown.bux.slots}</span></li>
+                            <li className="flex items-center justify-between gap-3"><span className="text-[var(--dashboard-text)]">Coin flip</span><span className="font-medium tabular-nums text-white">{allocation.casinoBreakdown.bux.coinflip}</span></li>
+                            <li className="flex items-center justify-between gap-3"><span className="text-[var(--dashboard-text)]">Roulette</span><span className="font-medium tabular-nums text-white">{allocation.casinoBreakdown.bux.roulette}</span></li>
+                          </ul>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </>

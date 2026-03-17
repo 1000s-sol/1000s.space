@@ -1560,7 +1560,8 @@ async function loadLeaderboard(sortBy = 'spins') {
     if (listEl) listEl.innerHTML = '';
     
     try {
-        const response = await fetch(`/api/leaderboard?sortBy=${sortBy}&limit=100`);
+        const tokenUsed = (typeof window.__SLOTS_TOKEN__ !== 'undefined' ? window.__SLOTS_TOKEN__ : 'knukl');
+        const response = await fetch(`/api/leaderboard?gameType=slots&tokenUsed=${encodeURIComponent(tokenUsed)}&sortBy=${sortBy}&limit=100`);
         
         if (!response.ok) {
             throw new Error(`Failed to load leaderboard: ${response.statusText}`);
@@ -1649,7 +1650,8 @@ function updateButtonStates() {
 // Load game stats (grand totals)
 async function loadGameStats() {
     try {
-        const response = await fetch('/api/game-stats');
+        const tokenUsed = (typeof window.__SLOTS_TOKEN__ !== 'undefined' ? window.__SLOTS_TOKEN__ : 'knukl');
+        const response = await fetch(`/api/game-stats?gameType=slots&tokenUsed=${encodeURIComponent(tokenUsed)}`);
         
         if (!response.ok) {
             console.error('Failed to load game stats:', response.statusText);

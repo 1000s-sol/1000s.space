@@ -28,6 +28,16 @@ function getDateET() {
     .toLocaleDateString("en-CA", { timeZone: "America/New_York" });
 }
 
+function normToken(token) {
+  return (token != null && String(token).toLowerCase() === "bux") ? "bux" : "knukl";
+}
+
+function calcCasinoAllocation(plays, spentTokens) {
+  const base = plays > 0 ? 10 : 0;
+  const spendBonus = Math.floor((spentTokens || 0) / 500) * 10;
+  return base + spendBonus;
+}
+
 async function handler(req, res) {
   setCors(res, req.headers?.origin);
   if (req.method === "OPTIONS") return res.end();
@@ -119,13 +129,53 @@ async function handler(req, res) {
       }
     }
 
+    // Casino allocation (previous 24h, token-specific breakdown)
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const emptyBreakdown = { slots: 0, coinflip: 0, roulette: 0 };
+    const casinoBreakdown = { knukl: { ...emptyBreakdown }, bux: { ...emptyBreakdown } };
+
+    const [slotsAgg, coinflipAgg, rouletteAgg] = await Promise.all([
+      sql`SELECT token_used, COUNT(*)::int AS plays, COALESCE(SUM(spin_cost), 0)::bigint AS spent_raw
+          FROM slots_game_history
+          WHERE wallet_address = ${walletAddress} AND timestamp >= ${since24h}
+          GROUP BY token_used`,
+      sql`SELECT token_used, COUNT(*)::int AS plays, COALESCE(SUM(flip_cost), 0)::bigint AS spent_raw
+          FROM coinflip_game_history
+          WHERE wallet_address = ${walletAddress} AND timestamp >= ${since24h}
+          GROUP BY token_used`,
+      sql`SELECT token_used, COUNT(*)::int AS plays, COALESCE(SUM(spin_cost), 0)::bigint AS spent_raw
+          FROM roulette_game_history
+          WHERE wallet_address = ${walletAddress} AND timestamp >= ${since24h}
+          GROUP BY token_used`,
+    ]);
+
+    (slotsAgg || []).forEach((r) => {
+      const t = normToken(r.token_used);
+      const spent = Number(r.spent_raw || 0) / 1e6;
+      casinoBreakdown[t].slots = calcCasinoAllocation(Number(r.plays || 0), spent);
+    });
+    (coinflipAgg || []).forEach((r) => {
+      const t = normToken(r.token_used);
+      const spent = Number(r.spent_raw || 0) / 1e6;
+      casinoBreakdown[t].coinflip = calcCasinoAllocation(Number(r.plays || 0), spent);
+    });
+    (rouletteAgg || []).forEach((r) => {
+      const t = normToken(r.token_used);
+      const spent = Number(r.spent_raw || 0) / 1e6;
+      casinoBreakdown[t].roulette = calcCasinoAllocation(Number(r.plays || 0), spent);
+    });
+
+    const casino =
+      casinoBreakdown.knukl.slots + casinoBreakdown.knukl.coinflip + casinoBreakdown.knukl.roulette +
+      casinoBreakdown.bux.slots + casinoBreakdown.bux.coinflip + casinoBreakdown.bux.roulette;
+
     const rows = await sql`
       SELECT allocation_archive, allocation_casino, allocation_x, allocation_discord, claimed_at
       FROM daily_airdrop_eligibility
       WHERE wallet_address = ${walletAddress} AND date_et = ${dateEt}
     `;
     const row = rows[0];
-    const casino = row ? Number(row.allocation_casino || 0) : 0;
+    // Casino is computed live from previous 24h gameplay. (We still store it in daily_airdrop_eligibility for claims/audit.)
     const discord = row ? Number(row.allocation_discord || 0) : 0;
     const totalAllocation = archiveTotal + casino + allocationX + discord;
     const claimed = row ? row.claimed_at != null : false;
@@ -136,6 +186,7 @@ async function handler(req, res) {
       VALUES (${walletAddress}, ${dateEt}, ${archiveTotal}, ${casino}, ${allocationX}, ${discord}, NOW())
       ON CONFLICT (wallet_address, date_et) DO UPDATE SET
         allocation_archive = ${archiveTotal},
+        allocation_casino = ${casino},
         allocation_x = ${allocationX},
         updated_at = NOW()
     `;
@@ -144,6 +195,7 @@ async function handler(req, res) {
       walletAddress,
       dateEt,
       allocations: { archive: archiveTotal, casino, x: allocationX, discord },
+      casinoBreakdown,
       archiveBreakdown,
       xFollowedAccounts,
       xEngagement,

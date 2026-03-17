@@ -238,7 +238,8 @@ function setupSelectionButtons() {
 
 async function loadGameStats() {
   try {
-    const response = await fetch('/api/game-stats?gameType=coinflip');
+    const tokenUsed = (typeof window.__COINFLIP_TOKEN__ !== 'undefined' ? window.__COINFLIP_TOKEN__ : 'knukl');
+    const response = await fetch(`/api/game-stats?gameType=coinflip&tokenUsed=${encodeURIComponent(tokenUsed)}`);
     if (!response.ok) return;
     const data = await response.json();
     const grandFlipsEl = document.getElementById('grand-total-flips');
@@ -496,7 +497,8 @@ async function loadLeaderboard(sortBy) {
   if (loadingEl) loadingEl.style.display = 'block';
   if (listEl) listEl.innerHTML = '';
   try {
-    const response = await fetch(`/api/leaderboard?gameType=coinflip&sortBy=${sortBy || 'flips'}&limit=100`);
+    const tokenUsed = (typeof window.__COINFLIP_TOKEN__ !== 'undefined' ? window.__COINFLIP_TOKEN__ : 'knukl');
+    const response = await fetch(`/api/leaderboard?gameType=coinflip&tokenUsed=${encodeURIComponent(tokenUsed)}&sortBy=${sortBy || 'flips'}&limit=100`);
     if (!response.ok) throw new Error('Failed to load leaderboard');
     const data = await response.json();
     if (data.error) throw new Error(data.error);

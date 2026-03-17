@@ -12,10 +12,11 @@ async function handler(req, res) {
 
   const gameType = (req.query.gameType || "slots").toLowerCase();
   if (gameType !== "slots" && gameType !== "coinflip") return json(res, 400, { error: "gameType must be slots or coinflip" });
+  const tokenUsed = (req.query.tokenUsed || "knukl").toString().toLowerCase() === "bux" ? "bux" : "knukl";
 
   try {
     if (gameType === "coinflip") {
-      const stats = await sql`SELECT total_flips, total_won, total_wagered FROM coinflip_players`;
+      const stats = await sql`SELECT total_flips, total_won, total_wagered FROM coinflip_players WHERE token_used = ${tokenUsed}`;
       let grandTotalFlips = 0;
       let grandTotalWon = 0;
       let grandTotalWagered = 0;
@@ -34,7 +35,7 @@ async function handler(req, res) {
       });
     }
 
-    const stats = await sql`SELECT total_spins, total_won, total_wagered FROM slots_players`;
+    const stats = await sql`SELECT total_spins, total_won, total_wagered FROM slots_players WHERE token_used = ${tokenUsed}`;
 
     let grandTotalSpins = 0;
     let grandTotalWon = 0;
