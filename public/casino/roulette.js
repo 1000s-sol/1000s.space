@@ -286,7 +286,7 @@
         var popupSelect = document.getElementById('roulette-popup-select-chip');
         var popupPlace = document.getElementById('roulette-popup-place-chip');
         if (!popupSelect || !popupPlace) return;
-        if (spinInProgress || (chipBalance <= 0 && totalStaked <= 0)) {
+        if (spinInProgress || chipBalance <= 0) {
             popupSelect.classList.remove('roulette-popup-visible');
             popupPlace.classList.remove('roulette-popup-visible');
             return;
@@ -511,7 +511,7 @@
         var spinBtn = document.getElementById('roulette-spin');
         var collectBtn = document.getElementById('roulette-collect');
         if (buyBtn) buyBtn.disabled = !wallet || isCollecting || chipBalance > 0;
-        if (spinBtn) spinBtn.disabled = !wallet || (chipBalance <= 0 && totalStaked <= 0) || spinInProgress || isCollecting;
+        if (spinBtn) spinBtn.disabled = !wallet || chipBalance <= 0 || spinInProgress || isCollecting;
         if (collectBtn) collectBtn.disabled = !wallet || getTotalToCollect() <= 0 || isCollecting;
     }
 
@@ -584,20 +584,6 @@
                 showDisconnected();
             });
         }
-        window.addEventListener('message', function (e) {
-            if (!e.data || !e.data.type) return;
-            if (e.data.type === 'CONNECT_WALLET' && connectBtn) connectBtn.click();
-            if (e.data.type === 'WALLET_ADDRESS' && e.data.address) {
-                showConnected(e.data.address);
-                initConnection();
-                updateBalance().then(function () { return loadPlayerData(); }).then(updateRouletteButtonStates);
-            }
-            if (e.data.type === 'DISCONNECT_WALLET') {
-                if (window.solana && window.solana.disconnect) window.solana.disconnect().catch(function () {});
-                showDisconnected();
-                if (window.self !== window.top && window.parent) try { window.parent.postMessage({ type: 'WALLET_DISCONNECTED' }, '*'); } catch (_) {}
-            }
-        });
     }
 
     function updateBalance() {
@@ -760,17 +746,7 @@
                 });
             })
             .then(function (res) {
-                if (!res.ok) {
-                    return res.json().then(function (d) {
-                        var msg = d.error || d.message || 'Collect failed';
-                        if (d.error === 'Insufficient treasury balance' && d.availableBalance != null) {
-                            msg = 'Treasury has insufficient balance to pay out. Available: ' + Number(d.availableBalance).toFixed(2) + ' ' + label + '. Try a smaller collect or contact support.';
-                        } else if (String(d.message || '').toLowerCase().includes('treasury')) {
-                            msg = d.message || msg;
-                        }
-                        throw new Error(msg);
-                    });
-                }
+                if (!res.ok) return res.json().then(function (d) { throw new Error(d.error || d.message || 'Collect failed'); });
                 return res.json();
             })
             .then(function (data) {
@@ -787,13 +763,7 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ userWallet: wallet, signature: sig, amount: data.actualAmount || totalToCollectAmount, gameType: 'roulette' })
                         }).then(function (cr) {
-                            if (!cr.ok) {
-                                return cr.json().then(function (d) {
-                                    var msg = d.error || d.message || 'Confirm failed';
-                                    if (d.message) msg = d.message;
-                                    throw new Error(msg);
-                                });
-                            }
+                            if (!cr.ok) return cr.json().then(function (d) { throw new Error(d.error || 'Confirm failed'); });
                             return sig;
                         });
                     });
@@ -847,8 +817,13 @@
         };
         if (window.splToken) initWallet();
         else { window.addEventListener('splTokenLoaded', initWallet); setTimeout(initWallet, 2000); }
-        if (window.self !== window.top && window.parent) try { window.parent.postMessage({ type: 'REQUEST_WALLET' }, '*'); } catch (_) {}
         window.addEventListener('resize', renderChipStacks);
+        window.addEventListener('message', function (e) {
+            if (e.data && e.data.type === 'CONNECT_WALLET') {
+                var btn = document.getElementById('connect-wallet');
+                if (btn) btn.click();
+            }
+        });
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
