@@ -640,9 +640,9 @@
         var costEl = document.getElementById('roulette-cost-per-chip');
         var numEl = document.getElementById('roulette-num-chips');
         var cost = parseFloat(costEl && costEl.value ? costEl.value : 100);
-        var num = parseInt(numEl && numEl.value ? numEl.value : 5000, 10);
+        var num = parseInt(numEl && numEl.value ? numEl.value : 500, 10);
         if (ALLOWED_COST_PER_CHIP.indexOf(cost) < 0) cost = 100;
-        if (ALLOWED_NUM_CHIPS.indexOf(num) < 0) num = 5000;
+        if (ALLOWED_NUM_CHIPS.indexOf(num) < 0) num = 500;
         if (!cost || cost <= 0 || !num || num <= 0) { showMessage({ title: 'Invalid input', message: 'Please enter valid cost per chip and number of chips.', isError: true }); return; }
         var total = cost * num;
         var label = getTokenLabel();
