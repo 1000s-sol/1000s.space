@@ -106,11 +106,21 @@
     function updateChipUI() {
         var el = document.getElementById('roulette-chips');
         if (el) el.textContent = chipBalance;
+        updateToCollectUI();
     }
 
     function updateStakedUI() {
         var el = document.getElementById('roulette-staked');
         if (el) el.textContent = getTotalStaked();
+    }
+
+    function getTotalToCollect() {
+        return chipBalance * costPerChip + unclaimedRewards;
+    }
+
+    function updateToCollectUI() {
+        var el = document.getElementById('roulette-to-collect');
+        if (el) el.textContent = Math.floor(getTotalToCollect());
     }
 
     function renderChipStacks() {
@@ -502,7 +512,7 @@
         var collectBtn = document.getElementById('roulette-collect');
         if (buyBtn) buyBtn.disabled = !wallet || isCollecting || chipBalance > 0;
         if (spinBtn) spinBtn.disabled = !wallet || chipBalance <= 0 || spinInProgress || isCollecting;
-        if (collectBtn) collectBtn.disabled = !wallet || chipBalance <= 0 || isCollecting;
+        if (collectBtn) collectBtn.disabled = !wallet || getTotalToCollect() <= 0 || isCollecting;
     }
 
     function initConnection() {
@@ -603,6 +613,7 @@
                 }
                 setCostPerChipLabel();
                 updateChipUI();
+                updateToCollectUI();
                 updatePopups();
                 updateRouletteButtonStates();
             })
@@ -690,19 +701,26 @@
     }
 
     function withdrawWinnings() {
-        if (chipBalance <= 0) { showMessage({ title: 'No chips', message: 'No chips to collect.', isError: true }); return; }
         if (!wallet || !connection) { showMessage({ title: 'Wallet required', message: 'Please connect your wallet.', isError: true }); return; }
         if (!window.splToken) { showMessage({ title: 'Loading', message: 'Token library still loading. Try again in a moment.', isError: true }); return; }
-        var chipValueToken = chipBalance * costPerChip;
-        if (chipValueToken <= 0) { showMessage({ title: 'No value', message: 'No value to collect.', isError: true }); return; }
         var label = getTokenLabel();
+        var totalToCollectAmount = 0;
         isCollecting = true;
         updateRouletteButtonStates();
         fetch('/api/load-player?walletAddress=' + encodeURIComponent(wallet) + '&gameType=roulette')
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (player) {
                 var currentUnclaimed = (player && player.unclaimedRewards) ? player.unclaimedRewards : unclaimedRewards;
-                return currentUnclaimed + chipValueToken;
+                var chipValueToken = chipBalance * costPerChip;
+                var totalToCollect = currentUnclaimed + chipValueToken;
+                if (totalToCollect <= 0) {
+                    isCollecting = false;
+                    updateRouletteButtonStates();
+                    showMessage({ title: 'Nothing to collect', message: 'No chips or unclaimed winnings to collect.', isError: true });
+                    return Promise.reject(new Error('NOTHING_TO_COLLECT'));
+                }
+                totalToCollectAmount = totalToCollect;
+                return totalToCollect;
             })
             .then(function (newUnclaimed) {
                 return fetch('/api/save-game', {
@@ -724,7 +742,7 @@
                 return fetch('/api/collect', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userWallet: wallet, amount: chipValueToken, gameType: 'roulette', tokenUsed: isBuxToken() ? 'bux' : 'knukl' })
+                    body: JSON.stringify({ userWallet: wallet, amount: totalToCollectAmount, gameType: 'roulette', tokenUsed: isBuxToken() ? 'bux' : 'knukl' })
                 });
             })
             .then(function (res) {
@@ -743,7 +761,7 @@
                         return fetch('/api/confirm-collect', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ userWallet: wallet, signature: sig, amount: data.actualAmount || chipValueToken, gameType: 'roulette' })
+                            body: JSON.stringify({ userWallet: wallet, signature: sig, amount: data.actualAmount || totalToCollectAmount, gameType: 'roulette' })
                         }).then(function (cr) {
                             if (!cr.ok) return cr.json().then(function (d) { throw new Error(d.error || 'Confirm failed'); });
                             return sig;
@@ -760,9 +778,10 @@
                 updateBalance();
                 loadPlayerData();
                 updateRouletteButtonStates();
-                showMessage({ title: 'Collect complete', message: 'Successfully collected ' + chipValueToken.toFixed(2) + ' ' + label + '!', txSignature: sig });
+                showMessage({ title: 'Collect complete', message: 'Successfully collected ' + totalToCollectAmount.toFixed(2) + ' ' + label + '!', txSignature: sig });
             })
             .catch(function (err) {
+                if (err && err.message === 'NOTHING_TO_COLLECT') return;
                 if (String(err.message || '').match(/reject|authorized|cancelled/i)) return;
                 showMessage({ title: 'Collect failed', message: 'Failed to collect: ' + (err.message || err), isError: true });
             })
@@ -777,6 +796,7 @@
         setCostPerChipLabel();
         showThree(0);
         updateChipUI();
+        updateToCollectUI();
         updateStakedUI();
         updateUndoButton();
         updateReplaceButton();
