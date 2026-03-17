@@ -465,11 +465,14 @@
                 lastChipTypes = copyBets(chipTypes);
                 showWinMessage(win.profit);
                 saveSpinToDb(result, win);
+                var wonToken = (win && win.profit) ? win.profit * costPerChip : 0;
+                if (wonToken > 0) { unclaimedRewards += wonToken; }
                 clearTable();
                 userClickedChipYet = false;
                 selectedChipValue = 0;
                 document.querySelectorAll('.roulette-chip').forEach(function (b) { b.classList.remove('selected'); b.setAttribute('aria-pressed', 'false'); });
                 updateChipUI();
+                updateToCollectUI();
                 updateReplaceButton();
                 updateRouletteButtonStates();
                 btn.disabled = false;
@@ -510,9 +513,18 @@
         var buyBtn = document.getElementById('roulette-buy-chips');
         var spinBtn = document.getElementById('roulette-spin');
         var collectBtn = document.getElementById('roulette-collect');
-        if (buyBtn) buyBtn.disabled = !wallet || isCollecting || chipBalance > 0;
-        if (spinBtn) spinBtn.disabled = !wallet || chipBalance <= 0 || spinInProgress || isCollecting;
-        if (collectBtn) collectBtn.disabled = !wallet || getTotalToCollect() <= 0 || isCollecting;
+        var totalStaked = getTotalStaked();
+        var totalToCollect = getTotalToCollect();
+        var buyEnabled = false, spinEnabled = false, collectEnabled = false;
+        if (wallet && !isCollecting) {
+            if (totalStaked > 0) spinEnabled = true;
+            else if (chipBalance > 0) { }
+            else if (totalToCollect > 0) collectEnabled = true;
+            else buyEnabled = true;
+        }
+        if (buyBtn) buyBtn.disabled = !buyEnabled;
+        if (spinBtn) spinBtn.disabled = !spinEnabled || spinInProgress;
+        if (collectBtn) collectBtn.disabled = !collectEnabled;
     }
 
     function initConnection() {
@@ -767,7 +779,7 @@
                         return fetch('/api/confirm-collect', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ userWallet: wallet, signature: sig, amount: data.actualAmount || totalToCollectAmount, gameType: 'roulette' })
+                            body: JSON.stringify({ userWallet: wallet, signature: sig, amount: data.actualAmount || totalToCollectAmount, gameType: 'roulette', token: isBuxToken() ? 'bux' : 'knukl' })
                         }).then(function (cr) {
                             if (!cr.ok) {
                                 return cr.json().then(function (d) {

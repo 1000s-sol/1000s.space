@@ -25,8 +25,9 @@ async function handler(req, res) {
     }
 
     if (gameType === "roulette") {
+      const tokenUsed = (req.query.tokenUsed || "knukl").toString().toLowerCase() === "bux" ? "bux" : "knukl";
       const rows = await sql`SELECT wallet_address, total_spins, total_won, total_wagered, unclaimed_rewards, chips_balance, cost_per_chip, token_used, created_at
-        FROM roulette_players WHERE wallet_address = ${walletAddress}`;
+        FROM roulette_players WHERE wallet_address = ${walletAddress} AND token_used = ${tokenUsed}`;
       const player = rows[0];
       if (!player) {
         return json(res, 200, {

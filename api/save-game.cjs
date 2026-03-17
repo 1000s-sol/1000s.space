@@ -127,7 +127,7 @@ async function handler(req, res) {
     }
 
     if (gameTypeNorm === "roulette") {
-      const existing = await sql`SELECT wallet_address FROM roulette_players WHERE wallet_address = ${walletAddress}`;
+      const existing = await sql`SELECT wallet_address FROM roulette_players WHERE wallet_address = ${walletAddress} AND token_used = ${tokenUsedNorm}`;
       const existingPlayer = existing[0];
       const nowR = new Date().toISOString();
       let total_spins_r, total_wagered_r, total_won_r, unclaimed_rewards_r, chips_balance_r, cost_per_chip_r, created_at_r;
@@ -140,14 +140,14 @@ async function handler(req, res) {
         unclaimed_rewards_r = updateUnclaimedRewards !== undefined ? BigInt(Math.floor(updateUnclaimedRewards * 1e6)).toString() : BigInt(0).toString();
         chips_balance_r = chipsPurchased !== undefined && chipsPurchased > 0 ? chipsPurchased : (updateChipsBalance !== undefined ? Math.max(0, Math.floor(updateChipsBalance)) : 0);
         cost_per_chip_r = (costPerChip && costPerChip > 0) || (chipsPurchased > 0) ? Math.floor(costPerChip || 100) : 100;
-        await sql`INSERT INTO roulette_players (wallet_address, total_spins, total_wagered, total_won, unclaimed_rewards, chips_balance, cost_per_chip, token_used, created_at, updated_at)
-          VALUES (${walletAddress}, ${total_spins_r}, ${total_wagered_r}, ${total_won_r}, ${unclaimed_rewards_r}, ${chips_balance_r}, ${cost_per_chip_r}, ${tokenUsedNorm}, ${created_at_r}, ${nowR})`;
+        await sql`INSERT INTO roulette_players (wallet_address, token_used, total_spins, total_wagered, total_won, unclaimed_rewards, chips_balance, cost_per_chip, created_at, updated_at)
+          VALUES (${walletAddress}, ${tokenUsedNorm}, ${total_spins_r}, ${total_wagered_r}, ${total_won_r}, ${unclaimed_rewards_r}, ${chips_balance_r}, ${cost_per_chip_r}, ${created_at_r}, ${nowR})`;
         if (chipsPurchased !== undefined && chipsPurchased > 0) {
           const totalCostRaw = BigInt(Math.floor((cost_per_chip_r * chipsPurchased) * 1e6)).toString();
           await sql`INSERT INTO roulette_purchases (wallet_address, token_used, cost_per_chip, num_chips, total_cost_raw) VALUES (${walletAddress}, ${tokenUsedNorm}, ${cost_per_chip_r}, ${chipsPurchased}, ${totalCostRaw})`;
         }
       } else {
-        const cur = await sql`SELECT total_spins, total_won, total_wagered, unclaimed_rewards, chips_balance, cost_per_chip, token_used FROM roulette_players WHERE wallet_address = ${walletAddress}`;
+        const cur = await sql`SELECT total_spins, total_won, total_wagered, unclaimed_rewards, chips_balance, cost_per_chip FROM roulette_players WHERE wallet_address = ${walletAddress} AND token_used = ${tokenUsedNorm}`;
         const c = cur[0];
         if (!c) return json(res, 500, { error: "Player not found" });
         total_spins_r = c.total_spins || 0;
@@ -156,7 +156,6 @@ async function handler(req, res) {
         unclaimed_rewards_r = (c.unclaimed_rewards || "0").toString();
         chips_balance_r = c.chips_balance || 0;
         cost_per_chip_r = c.cost_per_chip ?? 100;
-        const currentToken = c.token_used || "knukl";
 
         if (chipsPurchased !== undefined && chipsPurchased > 0) {
           if (chips_balance_r > 0) return json(res, 400, { error: "Use or collect chips before buying more.", chipsBalance: chips_balance_r });
@@ -175,8 +174,7 @@ async function handler(req, res) {
         }
         if (updateUnclaimedRewards !== undefined) unclaimed_rewards_r = BigInt(Math.floor(updateUnclaimedRewards * 1e6)).toString();
         else if (wonAmount > 0) unclaimed_rewards_r = (BigInt(unclaimed_rewards_r) + BigInt(Math.floor(wonAmount * 1e6))).toString();
-        const tokenToStore = (chipsPurchased !== undefined && chipsPurchased > 0) ? tokenUsedNorm : currentToken;
-        await sql`UPDATE roulette_players SET total_spins = ${total_spins_r}, total_wagered = ${total_wagered_r}, total_won = ${total_won_r}, unclaimed_rewards = ${unclaimed_rewards_r}, chips_balance = ${chips_balance_r}, cost_per_chip = ${cost_per_chip_r}, token_used = ${tokenToStore}, updated_at = ${nowR} WHERE wallet_address = ${walletAddress}`;
+        await sql`UPDATE roulette_players SET total_spins = ${total_spins_r}, total_wagered = ${total_wagered_r}, total_won = ${total_won_r}, unclaimed_rewards = ${unclaimed_rewards_r}, chips_balance = ${chips_balance_r}, cost_per_chip = ${cost_per_chip_r}, updated_at = ${nowR} WHERE wallet_address = ${walletAddress} AND token_used = ${tokenUsedNorm}`;
       }
       if (resultSymbols && resultSymbols.length > 0) {
         const resultNumber = String(resultSymbols[0]);
