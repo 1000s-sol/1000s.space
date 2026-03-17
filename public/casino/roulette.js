@@ -463,7 +463,6 @@
                 if (last10Results.length > 7) last10Results.shift();
                 renderLast10();
                 var win = calculateWinnings(result);
-                chipBalance += win.totalReturned;
                 lastBets = copyBets(bets);
                 lastChipTypes = copyBets(chipTypes);
                 showWinMessage(win.profit);
