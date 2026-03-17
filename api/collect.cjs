@@ -42,21 +42,19 @@ async function handler(req, res) {
   if (req.method !== "POST") return json(res, 405, { error: "Method not allowed" });
 
   try {
-    let { userWallet, amount, token = "knukl", gameType = "slots" } = req.body;
+    let { userWallet, amount: amountRaw, token = "knukl", gameType = "slots" } = req.body;
+    let amount = amountRaw != null ? Number(amountRaw) : NaN;
     const gameTypeNorm = (gameType || "slots").toLowerCase();
     if (gameTypeNorm !== "slots" && gameTypeNorm !== "coinflip" && gameTypeNorm !== "roulette") {
       return json(res, 400, { error: "gameType must be slots, coinflip, or roulette" });
     }
-    if (!userWallet || !amount || amount <= 0) {
-      return json(res, 400, { error: "Invalid request: userWallet and amount required" });
+    if (!userWallet || !Number.isFinite(amount) || amount <= 0) {
+      return json(res, 400, { error: "Invalid request: userWallet and positive amount required" });
     }
     try {
       new PublicKey(userWallet);
     } catch (_) {
       return json(res, 400, { error: "Invalid wallet address format" });
-    }
-    if (isNaN(amount) || !isFinite(amount) || amount <= 0) {
-      return json(res, 400, { error: "Invalid amount: must be a positive number" });
     }
     if (amount > MAX_WIN_AMOUNT) {
       return json(res, 400, { error: `Win amount exceeds maximum limit of ${MAX_WIN_AMOUNT.toLocaleString()}` });

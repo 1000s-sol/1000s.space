@@ -15,13 +15,14 @@ async function handler(req, res) {
   if (!sql) return json(res, 500, { error: "Database not configured" });
 
   try {
-    const { userWallet, signature, amount, gameType = "slots" } = req.body;
+    const { userWallet, signature, amount: amountRaw, gameType = "slots" } = req.body;
+    const amount = amountRaw != null ? Number(amountRaw) : NaN;
     const gameTypeNorm = (gameType || "slots").toLowerCase();
     if (gameTypeNorm !== "slots" && gameTypeNorm !== "coinflip" && gameTypeNorm !== "roulette") {
       return json(res, 400, { error: "gameType must be slots, coinflip, or roulette" });
     }
-    if (!userWallet || !signature || !amount || amount <= 0) {
-      return json(res, 400, { error: "Invalid request: userWallet, signature, and amount required" });
+    if (!userWallet || !signature || !Number.isFinite(amount) || amount <= 0) {
+      return json(res, 400, { error: "Invalid request: userWallet, signature, and positive amount required" });
     }
     try {
       new PublicKey(userWallet);
@@ -91,7 +92,11 @@ async function handler(req, res) {
     return json(res, 200, { message: "Unclaimed rewards cleared successfully", amount });
   } catch (err) {
     console.error("Confirm collect error:", err);
-    return json(res, 500, { error: "Failed to confirm collect", message: err.message });
+    const msg = err.message || String(err);
+    return json(res, 500, {
+      error: "Failed to confirm collect",
+      message: msg.includes("treasury") ? "Could not confirm treasury payout. Please try again or contact support." : msg,
+    });
   }
 }
 

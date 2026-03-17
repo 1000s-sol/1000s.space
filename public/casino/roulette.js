@@ -286,7 +286,7 @@
         var popupSelect = document.getElementById('roulette-popup-select-chip');
         var popupPlace = document.getElementById('roulette-popup-place-chip');
         if (!popupSelect || !popupPlace) return;
-        if (spinInProgress || chipBalance <= 0) {
+        if (spinInProgress || (chipBalance <= 0 && totalStaked <= 0)) {
             popupSelect.classList.remove('roulette-popup-visible');
             popupPlace.classList.remove('roulette-popup-visible');
             return;
@@ -511,7 +511,7 @@
         var spinBtn = document.getElementById('roulette-spin');
         var collectBtn = document.getElementById('roulette-collect');
         if (buyBtn) buyBtn.disabled = !wallet || isCollecting || chipBalance > 0;
-        if (spinBtn) spinBtn.disabled = !wallet || chipBalance <= 0 || spinInProgress || isCollecting;
+        if (spinBtn) spinBtn.disabled = !wallet || (chipBalance <= 0 && totalStaked <= 0) || spinInProgress || isCollecting;
         if (collectBtn) collectBtn.disabled = !wallet || getTotalToCollect() <= 0 || isCollecting;
     }
 
@@ -746,7 +746,17 @@
                 });
             })
             .then(function (res) {
-                if (!res.ok) return res.json().then(function (d) { throw new Error(d.error || d.message || 'Collect failed'); });
+                if (!res.ok) {
+                    return res.json().then(function (d) {
+                        var msg = d.error || d.message || 'Collect failed';
+                        if (d.error === 'Insufficient treasury balance' && d.availableBalance != null) {
+                            msg = 'Treasury has insufficient balance to pay out. Available: ' + Number(d.availableBalance).toFixed(2) + ' ' + label + '. Try a smaller collect or contact support.';
+                        } else if (String(d.message || '').toLowerCase().includes('treasury')) {
+                            msg = d.message || msg;
+                        }
+                        throw new Error(msg);
+                    });
+                }
                 return res.json();
             })
             .then(function (data) {
@@ -763,7 +773,13 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ userWallet: wallet, signature: sig, amount: data.actualAmount || totalToCollectAmount, gameType: 'roulette' })
                         }).then(function (cr) {
-                            if (!cr.ok) return cr.json().then(function (d) { throw new Error(d.error || 'Confirm failed'); });
+                            if (!cr.ok) {
+                                return cr.json().then(function (d) {
+                                    var msg = d.error || d.message || 'Confirm failed';
+                                    if (d.message) msg = d.message;
+                                    throw new Error(msg);
+                                });
+                            }
                             return sig;
                         });
                     });
