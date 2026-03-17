@@ -26,18 +26,40 @@ async function handler(req, res) {
     if (gameType === "coinflip") {
       let players;
       if (sortBy === "flips") {
-        players = await sql`SELECT wallet_address, total_flips, total_won, total_wagered, created_at
-          FROM coinflip_players WHERE token_used = ${tokenUsed} AND total_flips > 0 ORDER BY total_flips DESC LIMIT ${limit}`;
+        players = await sql`
+          SELECT c.wallet_address,
+                 COALESCE(u.discord_username, c.wallet_address) AS display_name,
+                 c.total_flips,
+                 c.total_won,
+                 c.total_wagered,
+                 c.created_at
+          FROM coinflip_players c
+          LEFT JOIN user_wallets uw ON uw.wallet_address = c.wallet_address
+          LEFT JOIN users u ON u.id = uw.user_id
+          WHERE c.token_used = ${tokenUsed} AND c.total_flips > 0
+          ORDER BY c.total_flips DESC
+          LIMIT ${limit}`;
       } else {
-        players = await sql`SELECT wallet_address, total_flips, total_won, total_wagered, created_at
-          FROM coinflip_players WHERE token_used = ${tokenUsed} AND total_flips > 0 ORDER BY total_won DESC LIMIT ${limit}`;
+        players = await sql`
+          SELECT c.wallet_address,
+                 COALESCE(u.discord_username, c.wallet_address) AS display_name,
+                 c.total_flips,
+                 c.total_won,
+                 c.total_wagered,
+                 c.created_at
+          FROM coinflip_players c
+          LEFT JOIN user_wallets uw ON uw.wallet_address = c.wallet_address
+          LEFT JOIN users u ON u.id = uw.user_id
+          WHERE c.token_used = ${tokenUsed} AND c.total_flips > 0
+          ORDER BY c.total_won DESC
+          LIMIT ${limit}`;
       }
       const leaderboard = (players || []).map((p) => {
         const totalWon = Number(p.total_won || 0) / Math.pow(10, TOKEN_DECIMALS);
         const totalWagered = Number(p.total_wagered || 0) / Math.pow(10, TOKEN_DECIMALS);
         return {
           walletAddress: p.wallet_address,
-          displayAddress: `${p.wallet_address.slice(0, 4)}...${p.wallet_address.slice(-4)}`,
+          displayAddress: p.display_name || `${p.wallet_address.slice(0, 4)}...${p.wallet_address.slice(-4)}`,
           totalFlips: p.total_flips || 0,
           totalWon,
           totalWagered,
@@ -53,14 +75,47 @@ async function handler(req, res) {
 
     let players;
     if (sortBy === "spins") {
-      players = await sql`SELECT wallet_address, total_spins, total_won, total_wagered, created_at
-        FROM slots_players WHERE token_used = ${tokenUsed} AND total_spins > 0 ORDER BY total_spins DESC LIMIT ${limit}`;
+      players = await sql`
+        SELECT s.wallet_address,
+               COALESCE(u.discord_username, s.wallet_address) AS display_name,
+               s.total_spins,
+               s.total_won,
+               s.total_wagered,
+               s.created_at
+        FROM slots_players s
+        LEFT JOIN user_wallets uw ON uw.wallet_address = s.wallet_address
+        LEFT JOIN users u ON u.id = uw.user_id
+        WHERE s.token_used = ${tokenUsed} AND s.total_spins > 0
+        ORDER BY s.total_spins DESC
+        LIMIT ${limit}`;
     } else if (sortBy === "won") {
-      players = await sql`SELECT wallet_address, total_spins, total_won, total_wagered, created_at
-        FROM slots_players WHERE token_used = ${tokenUsed} AND total_spins > 0 ORDER BY total_won DESC LIMIT ${limit}`;
+      players = await sql`
+        SELECT s.wallet_address,
+               COALESCE(u.discord_username, s.wallet_address) AS display_name,
+               s.total_spins,
+               s.total_won,
+               s.total_wagered,
+               s.created_at
+        FROM slots_players s
+        LEFT JOIN user_wallets uw ON uw.wallet_address = s.wallet_address
+        LEFT JOIN users u ON u.id = uw.user_id
+        WHERE s.token_used = ${tokenUsed} AND s.total_spins > 0
+        ORDER BY s.total_won DESC
+        LIMIT ${limit}`;
     } else {
-      players = await sql`SELECT wallet_address, total_spins, total_won, total_wagered, created_at
-        FROM slots_players WHERE token_used = ${tokenUsed} AND total_spins > 0 ORDER BY total_spins DESC LIMIT ${limit}`;
+      players = await sql`
+        SELECT s.wallet_address,
+               COALESCE(u.discord_username, s.wallet_address) AS display_name,
+               s.total_spins,
+               s.total_won,
+               s.total_wagered,
+               s.created_at
+        FROM slots_players s
+        LEFT JOIN user_wallets uw ON uw.wallet_address = s.wallet_address
+        LEFT JOIN users u ON u.id = uw.user_id
+        WHERE s.token_used = ${tokenUsed} AND s.total_spins > 0
+        ORDER BY s.total_spins DESC
+        LIMIT ${limit}`;
     }
 
     const leaderboard = (players || []).map((p) => {
@@ -69,7 +124,7 @@ async function handler(req, res) {
       const winRate = totalWagered > 0 ? (totalWon / totalWagered) * 100 : 0;
       return {
         walletAddress: p.wallet_address,
-        displayAddress: `${p.wallet_address.slice(0, 4)}...${p.wallet_address.slice(-4)}`,
+        displayAddress: p.display_name || `${p.wallet_address.slice(0, 4)}...${p.wallet_address.slice(-4)}`,
         totalSpins: p.total_spins || 0,
         totalWon,
         totalWagered,
