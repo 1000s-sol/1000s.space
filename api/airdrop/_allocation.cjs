@@ -34,7 +34,7 @@ function normToken(token) {
 
 function calcCasinoAllocation(plays, spentTokens) {
   const base = plays > 0 ? 10 : 0;
-  const spendBonus = Math.floor((spentTokens || 0) / 500) * 10;
+  const spendBonus = Math.floor((spentTokens || 0) / 5000) * 10;
   return base + spendBonus;
 }
 

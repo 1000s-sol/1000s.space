@@ -321,7 +321,7 @@ export function AirdropSection() {
                   {casinoExpanded && allocation?.casinoBreakdown && (
                     <div className="border-t border-[var(--dashboard-border)] bg-black/20 px-4 py-3">
                       <p className="text-xs font-medium text-[var(--dashboard-muted)] mb-2">
-                        Base 10 per game played + 10 per 500 tokens spent (per token)
+                        Base 10 per game played + 10 per 5000 tokens spent (per token)
                       </p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                         <div className="rounded-lg border border-[var(--dashboard-border)] bg-black/20 p-3">
