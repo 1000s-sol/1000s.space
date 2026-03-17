@@ -873,6 +873,9 @@ async function performSpin() {
                     // Don't fail the spin if DB save fails, but log it
                 } else {
                     console.log('Spin saved to database successfully');
+                    // Refresh token-specific grand totals + leaderboard after each saved spin
+                    loadGameStats();
+                    loadLeaderboard('spins');
                 }
             } catch (saveError) {
                 console.error('Error saving spin to database:', saveError);
