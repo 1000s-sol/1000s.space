@@ -120,7 +120,7 @@
 
     function updateToCollectUI() {
         var el = document.getElementById('roulette-to-collect');
-        if (el) el.textContent = Math.floor(getTotalToCollect());
+        if (el) el.textContent = Math.floor(unclaimedRewards);
     }
 
     function renderChipStacks() {
