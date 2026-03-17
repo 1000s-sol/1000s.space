@@ -1,6 +1,27 @@
 // Save slots game data (purchase or spin) — Neon Postgres
 const { sql, setCors, json } = require("./slots-helpers.cjs");
 
+function getDateET() {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+}
+
+async function bumpCasinoDailyTotals({ walletAddress, tokenUsed, gameType, spentRaw }) {
+  if (!sql) return;
+  const dateEt = getDateET();
+  const game = (gameType || "").toLowerCase();
+  const tokenNorm = (tokenUsed || "knukl").toLowerCase() === "bux" ? "bux" : "knukl";
+  if (game !== "slots" && game !== "coinflip" && game !== "roulette") return;
+  const spent = spentRaw != null ? BigInt(spentRaw) : 0n;
+  await sql`
+    INSERT INTO casino_daily_totals (date_et, wallet_address, token_used, game_type, plays, spent_raw, updated_at)
+    VALUES (${dateEt}, ${walletAddress}, ${tokenNorm}, ${game}, 1, ${spent.toString()}, NOW())
+    ON CONFLICT (date_et, wallet_address, token_used, game_type) DO UPDATE SET
+      plays = casino_daily_totals.plays + 1,
+      spent_raw = casino_daily_totals.spent_raw + ${spent.toString()},
+      updated_at = NOW()
+  `;
+}
+
 async function handler(req, res) {
   setCors(res, req.headers.origin);
   if (req.method === "OPTIONS") return res.end();
@@ -119,6 +140,7 @@ async function handler(req, res) {
         const wonAmountRaw = BigInt(Math.floor((wonAmount || 0) * 1e6)).toString();
         await sql`INSERT INTO coinflip_game_history (wallet_address, flip_cost, choice, result, won_amount, token_used, timestamp)
           VALUES (${walletAddress}, ${flipCostRaw}, ${choice}, ${result}, ${wonAmountRaw}, ${tokenUsedNorm}, ${now})`;
+        await bumpCasinoDailyTotals({ walletAddress, tokenUsed: tokenUsedNorm, gameType: "coinflip", spentRaw: flipCostRaw });
       }
 
       return json(res, 200, { success: true, message: "Game data saved successfully" });
@@ -180,6 +202,7 @@ async function handler(req, res) {
         const wonAmountRaw = BigInt(Math.floor((wonAmount || 0) * 1e6)).toString();
         await sql`INSERT INTO roulette_game_history (wallet_address, spin_cost, result_number, won_amount, token_used, timestamp)
           VALUES (${walletAddress}, ${spinCostRaw}, ${resultNumber}, ${wonAmountRaw}, ${tokenUsedNorm}, ${nowR})`;
+        await bumpCasinoDailyTotals({ walletAddress, tokenUsed: tokenUsedNorm, gameType: "roulette", spentRaw: spinCostRaw });
       }
       return json(res, 200, { success: true, message: "Game data saved successfully" });
     }
@@ -263,6 +286,7 @@ async function handler(req, res) {
       const wonAmountRaw = BigInt(Math.floor((wonAmount || 0) * 1e6)).toString();
       await sql`INSERT INTO slots_game_history (wallet_address, spin_cost, result_symbols, won_amount, token_used, timestamp)
         VALUES (${walletAddress}, ${spinCostRaw}, ${resultSymbolsArr}, ${wonAmountRaw}, ${tokenUsedNorm}, ${now})`;
+      await bumpCasinoDailyTotals({ walletAddress, tokenUsed: tokenUsedNorm, gameType: "slots", spentRaw: spinCostRaw });
     }
 
     return json(res, 200, { success: true, message: "Game data saved successfully" });
