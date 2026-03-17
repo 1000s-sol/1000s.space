@@ -42,7 +42,11 @@ async function handler(req, res) {
   if (req.method !== "POST") return json(res, 405, { error: "Method not allowed" });
 
   try {
-    let { userWallet, amount, token = "knukl" } = req.body;
+    let { userWallet, amount, token = "knukl", gameType = "slots" } = req.body;
+    const gameTypeNorm = (gameType || "slots").toLowerCase();
+    if (gameTypeNorm !== "slots" && gameTypeNorm !== "coinflip") {
+      return json(res, 400, { error: "gameType must be slots or coinflip" });
+    }
     if (!userWallet || !amount || amount <= 0) {
       return json(res, 400, { error: "Invalid request: userWallet and amount required" });
     }
@@ -67,10 +71,17 @@ async function handler(req, res) {
     }
 
     if (sql) {
-      const rows = await sql`SELECT unclaimed_rewards FROM players WHERE wallet_address = ${userWallet}`;
-      const playerData = rows[0];
       const dbDecimals = 6;
-      const dbUnclaimed = playerData ? Number(playerData.unclaimed_rewards || 0) / Math.pow(10, dbDecimals) : 0;
+      let playerData, dbUnclaimed;
+      if (gameTypeNorm === "coinflip") {
+        const rows = await sql`SELECT unclaimed_rewards FROM coinflip_players WHERE wallet_address = ${userWallet}`;
+        playerData = rows[0];
+        dbUnclaimed = playerData ? Number(playerData.unclaimed_rewards || 0) / Math.pow(10, dbDecimals) : 0;
+      } else {
+        const rows = await sql`SELECT unclaimed_rewards FROM slots_players WHERE wallet_address = ${userWallet}`;
+        playerData = rows[0];
+        dbUnclaimed = playerData ? Number(playerData.unclaimed_rewards || 0) / Math.pow(10, dbDecimals) : 0;
+      }
       if (dbUnclaimed <= 0) {
         return json(res, 400, { error: "No unclaimed rewards available", actualAmount: 0 });
       }

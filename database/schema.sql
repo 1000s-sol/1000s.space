@@ -1,5 +1,5 @@
 -- 1000s Neon Postgres — full schema
--- Run in Neon SQL Editor. For existing DBs that already have players/game_history, run migration_001.sql instead.
+-- Run in Neon SQL Editor. For existing DBs that already have players/game_history, run migration_001 then migration_009 to rename to slots_*.
 
 -- ─── Discord users (link multiple wallets to one Discord) ───
 CREATE TABLE IF NOT EXISTS users (
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS user_wallets (
 CREATE INDEX IF NOT EXISTS idx_user_wallets_user_id ON user_wallets(user_id);
 
 -- ─── Slots: player state (persists across refresh/disconnect) ───
-CREATE TABLE IF NOT EXISTS players (
+CREATE TABLE IF NOT EXISTS slots_players (
     wallet_address TEXT PRIMARY KEY,
     total_spins INTEGER DEFAULT 0,
     total_won BIGINT DEFAULT 0,
@@ -32,9 +32,9 @@ CREATE TABLE IF NOT EXISTS players (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS game_history (
+CREATE TABLE IF NOT EXISTS slots_game_history (
     id BIGSERIAL PRIMARY KEY,
-    wallet_address TEXT NOT NULL REFERENCES players(wallet_address) ON DELETE CASCADE,
+    wallet_address TEXT NOT NULL REFERENCES slots_players(wallet_address) ON DELETE CASCADE,
     spin_cost BIGINT NOT NULL,
     result_symbols INTEGER[] NOT NULL,
     won_amount BIGINT DEFAULT 0,
@@ -53,10 +53,10 @@ CREATE TABLE IF NOT EXISTS slots_purchases (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_game_history_wallet ON game_history(wallet_address);
-CREATE INDEX IF NOT EXISTS idx_game_history_timestamp ON game_history(timestamp DESC);
-CREATE INDEX IF NOT EXISTS idx_players_total_won ON players(total_won DESC);
-CREATE INDEX IF NOT EXISTS idx_players_total_spins ON players(total_spins DESC);
+CREATE INDEX IF NOT EXISTS idx_slots_game_history_wallet ON slots_game_history(wallet_address);
+CREATE INDEX IF NOT EXISTS idx_slots_game_history_timestamp ON slots_game_history(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_slots_players_total_won ON slots_players(total_won DESC);
+CREATE INDEX IF NOT EXISTS idx_slots_players_total_spins ON slots_players(total_spins DESC);
 CREATE INDEX IF NOT EXISTS idx_slots_purchases_wallet ON slots_purchases(wallet_address);
 
 -- Auto-update updated_at
@@ -68,8 +68,8 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-DROP TRIGGER IF EXISTS update_players_updated_at ON players;
-CREATE TRIGGER update_players_updated_at BEFORE UPDATE ON players
+DROP TRIGGER IF EXISTS update_slots_players_updated_at ON slots_players;
+CREATE TRIGGER update_slots_players_updated_at BEFORE UPDATE ON slots_players
     FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 
 DROP TRIGGER IF EXISTS update_users_updated_at ON users;
@@ -77,23 +77,23 @@ CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 
 -- RLS (optional)
-ALTER TABLE players ENABLE ROW LEVEL SECURITY;
-ALTER TABLE game_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE slots_players ENABLE ROW LEVEL SECURITY;
+ALTER TABLE slots_game_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_wallets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE slots_purchases ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Players can read" ON players;
-DROP POLICY IF EXISTS "Players can insert" ON players;
-DROP POLICY IF EXISTS "Players can update" ON players;
-CREATE POLICY "Players read" ON players FOR SELECT USING (true);
-CREATE POLICY "Players insert" ON players FOR INSERT WITH CHECK (true);
-CREATE POLICY "Players update" ON players FOR UPDATE USING (true);
+DROP POLICY IF EXISTS "Slots players read" ON slots_players;
+DROP POLICY IF EXISTS "Slots players insert" ON slots_players;
+DROP POLICY IF EXISTS "Slots players update" ON slots_players;
+CREATE POLICY "Slots players read" ON slots_players FOR SELECT USING (true);
+CREATE POLICY "Slots players insert" ON slots_players FOR INSERT WITH CHECK (true);
+CREATE POLICY "Slots players update" ON slots_players FOR UPDATE USING (true);
 
-DROP POLICY IF EXISTS "Anyone can read game history" ON game_history;
-DROP POLICY IF EXISTS "Players can insert game history" ON game_history;
-CREATE POLICY "Game history read" ON game_history FOR SELECT USING (true);
-CREATE POLICY "Game history insert" ON game_history FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Slots game history read" ON slots_game_history;
+DROP POLICY IF EXISTS "Slots game history insert" ON slots_game_history;
+CREATE POLICY "Slots game history read" ON slots_game_history FOR SELECT USING (true);
+CREATE POLICY "Slots game history insert" ON slots_game_history FOR INSERT WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Users read" ON users;
 DROP POLICY IF EXISTS "Users insert" ON users;

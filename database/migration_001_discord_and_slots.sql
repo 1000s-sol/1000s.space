@@ -1,5 +1,6 @@
 -- Migration: add Discord users, user_wallets, slots token_used, slots_purchases
 -- Run this if you already have players + game_history (e.g. from an earlier schema.sql).
+-- Then run migration_009 to rename players -> slots_players, game_history -> slots_game_history.
 
 -- Discord: users and wallet links
 CREATE TABLE IF NOT EXISTS users (

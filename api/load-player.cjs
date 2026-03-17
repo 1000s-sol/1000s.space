@@ -12,9 +12,9 @@ async function handler(req, res) {
 
   try {
     const walletAddress = req.query.walletAddress;
-    const gameType = req.query.gameType || "slots";
+    const gameType = (req.query.gameType || "slots").toLowerCase();
 
-    if (gameType !== "slots") return json(res, 400, { error: "Only gameType=slots supported" });
+    if (gameType !== "slots" && gameType !== "coinflip") return json(res, 400, { error: "gameType must be slots or coinflip" });
     if (!walletAddress) return json(res, 400, { error: "walletAddress query parameter is required" });
 
     try {
@@ -24,8 +24,44 @@ async function handler(req, res) {
       return json(res, 400, { error: "Invalid wallet address format" });
     }
 
+    if (gameType === "coinflip") {
+      const rows = await sql`SELECT wallet_address, total_flips, total_won, total_wagered, unclaimed_rewards, flips_remaining, cost_per_flip, token_used, created_at
+        FROM coinflip_players WHERE wallet_address = ${walletAddress}`;
+      const player = rows[0];
+
+      if (!player) {
+        return json(res, 200, {
+          walletAddress,
+          totalFlips: 0,
+          totalWon: 0,
+          totalWagered: 0,
+          unclaimedRewards: 0,
+          flipsRemaining: 0,
+          costPerFlip: 100,
+          tokenUsed: "knukl",
+          createdAt: null,
+        });
+      }
+
+      const totalWon = Number(player.total_won || 0) / Math.pow(10, TOKEN_DECIMALS);
+      const totalWagered = Number(player.total_wagered || 0) / Math.pow(10, TOKEN_DECIMALS);
+      const unclaimedRewards = Number(player.unclaimed_rewards || 0) / Math.pow(10, TOKEN_DECIMALS);
+
+      return json(res, 200, {
+        walletAddress: player.wallet_address,
+        totalFlips: player.total_flips || 0,
+        totalWon,
+        totalWagered,
+        unclaimedRewards,
+        flipsRemaining: player.flips_remaining || 0,
+        costPerFlip: player.cost_per_flip ?? 100,
+        tokenUsed: (player.token_used || "knukl").toLowerCase(),
+        createdAt: player.created_at,
+      });
+    }
+
     const rows = await sql`SELECT wallet_address, total_spins, total_won, total_wagered, unclaimed_rewards, spins_remaining, cost_per_spin, token_used, created_at
-      FROM players WHERE wallet_address = ${walletAddress}`;
+      FROM slots_players WHERE wallet_address = ${walletAddress}`;
     const player = rows[0];
 
     if (!player) {

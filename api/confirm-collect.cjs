@@ -15,7 +15,11 @@ async function handler(req, res) {
   if (!sql) return json(res, 500, { error: "Database not configured" });
 
   try {
-    const { userWallet, signature, amount } = req.body;
+    const { userWallet, signature, amount, gameType = "slots" } = req.body;
+    const gameTypeNorm = (gameType || "slots").toLowerCase();
+    if (gameTypeNorm !== "slots" && gameTypeNorm !== "coinflip") {
+      return json(res, 400, { error: "gameType must be slots or coinflip" });
+    }
     if (!userWallet || !signature || !amount || amount <= 0) {
       return json(res, 400, { error: "Invalid request: userWallet, signature, and amount required" });
     }
@@ -62,12 +66,18 @@ async function handler(req, res) {
       return json(res, 202, { message: "Transaction still processing", status: "processing" });
     }
 
-    const rows = await sql`SELECT unclaimed_rewards FROM players WHERE wallet_address = ${userWallet}`;
-    const playerData = rows[0];
-
-    if (!playerData) return json(res, 404, { error: "Player not found" });
-
-    const updateResult = await sql`UPDATE players SET unclaimed_rewards = 0 WHERE wallet_address = ${userWallet} AND unclaimed_rewards = ${playerData.unclaimed_rewards} RETURNING wallet_address`;
+    let rows, updateResult;
+    if (gameTypeNorm === "coinflip") {
+      rows = await sql`SELECT unclaimed_rewards FROM coinflip_players WHERE wallet_address = ${userWallet}`;
+      const playerData = rows[0];
+      if (!playerData) return json(res, 404, { error: "Player not found" });
+      updateResult = await sql`UPDATE coinflip_players SET unclaimed_rewards = 0 WHERE wallet_address = ${userWallet} AND unclaimed_rewards = ${playerData.unclaimed_rewards} RETURNING wallet_address`;
+    } else {
+      rows = await sql`SELECT unclaimed_rewards FROM slots_players WHERE wallet_address = ${userWallet}`;
+      const playerData = rows[0];
+      if (!playerData) return json(res, 404, { error: "Player not found" });
+      updateResult = await sql`UPDATE slots_players SET unclaimed_rewards = 0 WHERE wallet_address = ${userWallet} AND unclaimed_rewards = ${playerData.unclaimed_rewards} RETURNING wallet_address`;
+    }
 
     if (!updateResult || updateResult.length === 0) {
       return json(res, 200, { message: "Unclaimed rewards already cleared", alreadyCleared: true });

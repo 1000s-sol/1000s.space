@@ -1,5 +1,5 @@
 -- Indexes for “total spent on spins in the last 24 hours” (airdrop allocations).
--- Run in Neon SQL Editor after schema / migration_001.
+-- Run after schema / migration_001. Run before migration_009 (uses game_history table name).
 
 -- Wagered in last 24h: SUM(game_history.spin_cost) WHERE wallet = ? AND timestamp >= now() - interval '24 hours'
 CREATE INDEX IF NOT EXISTS idx_game_history_wallet_timestamp

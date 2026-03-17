@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 const GAMES = [
   { id: "slots", name: "Slots", path: "/games/slots", image: "/casino/images/slots.png", built: true },
   { id: "roulette", name: "Roulette", path: "/games/roulette", image: "/casino/images/roulette.png", built: true },
+  { id: "coinflip", name: "Coin flip", path: "/games/coinflip", image: "/casino/images/knukl-heads.png", built: true },
   { id: "blackjack", name: "Black Jack", path: "/games/blackjack", image: "/casino/images/blackjack.png?v=1", built: false },
 ] as const;
 

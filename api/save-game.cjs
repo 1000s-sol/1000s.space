@@ -20,11 +20,18 @@ async function handler(req, res) {
       gameType = "slots",
       tokenUsed,
       token,
+      // coinflip
+      flipsPurchased,
+      updateFlipsRemaining,
+      flipCost,
+      choice,
+      result,
     } = req.body;
 
     const tokenUsedNorm = (tokenUsed || token || "knukl").toLowerCase() === "bux" ? "bux" : "knukl";
+    const gameTypeNorm = (gameType || "slots").toLowerCase();
 
-    if (gameType !== "slots") return json(res, 400, { error: "Only gameType=slots supported" });
+    if (gameTypeNorm !== "slots" && gameTypeNorm !== "coinflip") return json(res, 400, { error: "gameType must be slots or coinflip" });
     if (!walletAddress) return json(res, 400, { error: "walletAddress is required" });
 
     try {
@@ -35,7 +42,87 @@ async function handler(req, res) {
     }
 
     const now = new Date().toISOString();
-    const existing = await sql`SELECT wallet_address FROM players WHERE wallet_address = ${walletAddress}`;
+
+    if (gameTypeNorm === "coinflip") {
+      const existing = await sql`SELECT wallet_address FROM coinflip_players WHERE wallet_address = ${walletAddress}`;
+      const existingPlayer = existing[0];
+
+      let total_flips, total_wagered, total_won, unclaimed_rewards, flips_remaining, cost_per_flip, created_at;
+
+      if (!existingPlayer) {
+        created_at = now;
+        total_flips = (choice && result) ? 1 : 0;
+        total_wagered = BigInt(Math.floor((flipCost || 0) * 1e6)).toString();
+        total_won = BigInt(Math.floor((wonAmount || 0) * 1e6)).toString();
+        unclaimed_rewards = updateUnclaimedRewards
+          ? BigInt(Math.floor(updateUnclaimedRewards * 1e6)).toString()
+          : BigInt(Math.floor((wonAmount || 0) * 1e6)).toString();
+        flips_remaining = flipsPurchased !== undefined && flipsPurchased > 0 ? flipsPurchased : 0;
+        cost_per_flip = (flipCost && flipCost > 0) || (flipsPurchased !== undefined && flipsPurchased > 0)
+          ? Math.floor(flipCost || 100)
+          : 100;
+
+        await sql`INSERT INTO coinflip_players (wallet_address, total_flips, total_wagered, total_won, unclaimed_rewards, flips_remaining, cost_per_flip, token_used, created_at, updated_at)
+          VALUES (${walletAddress}, ${total_flips}, ${total_wagered}, ${total_won}, ${unclaimed_rewards}, ${flips_remaining}, ${cost_per_flip}, ${tokenUsedNorm}, ${created_at}, ${now})`;
+
+        if (flipsPurchased !== undefined && flipsPurchased > 0) {
+          const totalCostRaw = BigInt(Math.floor((cost_per_flip * flipsPurchased) * 1e6)).toString();
+          await sql`INSERT INTO coinflip_purchases (wallet_address, token_used, cost_per_flip, num_flips, total_cost_raw) VALUES (${walletAddress}, ${tokenUsedNorm}, ${cost_per_flip}, ${flipsPurchased}, ${totalCostRaw})`;
+        }
+      } else {
+        const cur = await sql`SELECT total_flips, total_won, total_wagered, unclaimed_rewards, flips_remaining, cost_per_flip, token_used FROM coinflip_players WHERE wallet_address = ${walletAddress}`;
+        const c = cur[0];
+        if (!c) return json(res, 500, { error: "Player not found after select" });
+
+        total_flips = c.total_flips || 0;
+        total_wagered = (c.total_wagered || 0).toString();
+        total_won = (c.total_won || 0).toString();
+        unclaimed_rewards = (c.unclaimed_rewards || "0").toString();
+        flips_remaining = c.flips_remaining || 0;
+        cost_per_flip = c.cost_per_flip ?? 100;
+        const currentTokenUsed = c.token_used || "knukl";
+
+        if (flipsPurchased !== undefined && flipsPurchased > 0) {
+          if (flips_remaining > 0) {
+            return json(res, 400, {
+              error: "Cannot purchase flips while flips are remaining. Use existing flips first.",
+              flipsRemaining: flips_remaining,
+            });
+          }
+          flips_remaining = flips_remaining + flipsPurchased;
+          cost_per_flip = flipCost && flipCost > 0 ? Math.floor(flipCost) : 100;
+          const totalCostRaw = BigInt(Math.floor((cost_per_flip * flipsPurchased) * 1e6)).toString();
+          await sql`INSERT INTO coinflip_purchases (wallet_address, token_used, cost_per_flip, num_flips, total_cost_raw) VALUES (${walletAddress}, ${tokenUsedNorm}, ${cost_per_flip}, ${flipsPurchased}, ${totalCostRaw})`;
+        } else if (updateFlipsRemaining !== undefined && (choice && result)) {
+          const storedCost = c.cost_per_flip || 100;
+          total_flips = total_flips + 1;
+          flips_remaining = updateFlipsRemaining;
+          total_wagered = (BigInt(total_wagered) + BigInt(Math.floor(storedCost * 1e6))).toString();
+          total_won = (BigInt(total_won) + BigInt(Math.floor((wonAmount || 0) * 1e6))).toString();
+          if (updateFlipsRemaining === 0) cost_per_flip = null;
+        }
+
+        if (updateUnclaimedRewards !== undefined) {
+          unclaimed_rewards = BigInt(Math.floor(updateUnclaimedRewards * 1e6)).toString();
+        } else if (wonAmount > 0) {
+          unclaimed_rewards = (BigInt(unclaimed_rewards) + BigInt(Math.floor(wonAmount * 1e6))).toString();
+        }
+
+        const tokenToStore = flipsPurchased !== undefined && flipsPurchased > 0 ? tokenUsedNorm : currentTokenUsed;
+        await sql`UPDATE coinflip_players SET total_flips = ${total_flips}, total_wagered = ${total_wagered}, total_won = ${total_won}, unclaimed_rewards = ${unclaimed_rewards}, flips_remaining = ${flips_remaining}, cost_per_flip = ${cost_per_flip}, token_used = ${tokenToStore}, updated_at = ${now} WHERE wallet_address = ${walletAddress}`;
+      }
+
+      if (choice && result) {
+        const flipCostRaw = BigInt(Math.floor((flipCost || 0) * 1e6)).toString();
+        const wonAmountRaw = BigInt(Math.floor((wonAmount || 0) * 1e6)).toString();
+        await sql`INSERT INTO coinflip_game_history (wallet_address, flip_cost, choice, result, won_amount, token_used, timestamp)
+          VALUES (${walletAddress}, ${flipCostRaw}, ${choice}, ${result}, ${wonAmountRaw}, ${tokenUsedNorm}, ${now})`;
+      }
+
+      return json(res, 200, { success: true, message: "Game data saved successfully" });
+    }
+
+    const existing = await sql`SELECT wallet_address FROM slots_players WHERE wallet_address = ${walletAddress}`;
     const existingPlayer = existing[0];
 
     let total_spins, total_wagered, total_won, unclaimed_rewards, spins_remaining, cost_per_spin, created_at;
@@ -52,7 +139,7 @@ async function handler(req, res) {
       spins_remaining = spinsPurchased !== undefined && spinsPurchased > 0 ? spinsPurchased : 0;
       cost_per_spin = spinCost && spinCost > 0 ? Math.floor(spinCost) : 100;
 
-      await sql`INSERT INTO players (wallet_address, total_spins, total_wagered, total_won, unclaimed_rewards, spins_remaining, cost_per_spin, token_used, created_at, updated_at)
+      await sql`INSERT INTO slots_players (wallet_address, total_spins, total_wagered, total_won, unclaimed_rewards, spins_remaining, cost_per_spin, token_used, created_at, updated_at)
         VALUES (${walletAddress}, ${total_spins}, ${total_wagered}, ${total_won}, ${unclaimed_rewards}, ${spins_remaining}, ${cost_per_spin}, ${tokenUsedNorm}, ${created_at}, ${now})`;
 
       if (spinsPurchased !== undefined && spinsPurchased > 0) {
@@ -60,7 +147,7 @@ async function handler(req, res) {
         await sql`INSERT INTO slots_purchases (wallet_address, token_used, cost_per_spin, num_spins, total_cost_raw) VALUES (${walletAddress}, ${tokenUsedNorm}, ${cost_per_spin}, ${spinsPurchased}, ${totalCostRaw})`;
       }
     } else {
-      const cur = await sql`SELECT total_spins, total_won, total_wagered, unclaimed_rewards, spins_remaining, cost_per_spin, token_used FROM players WHERE wallet_address = ${walletAddress}`;
+      const cur = await sql`SELECT total_spins, total_won, total_wagered, unclaimed_rewards, spins_remaining, cost_per_spin, token_used FROM slots_players WHERE wallet_address = ${walletAddress}`;
       const c = cur[0];
       if (!c) return json(res, 500, { error: "Player not found after select" });
 
@@ -107,14 +194,14 @@ async function handler(req, res) {
       }
 
       const tokenToStore = spinsPurchased !== undefined && spinsPurchased > 0 ? tokenUsedNorm : currentTokenUsed;
-      await sql`UPDATE players SET total_spins = ${total_spins}, total_wagered = ${total_wagered}, total_won = ${total_won}, unclaimed_rewards = ${unclaimed_rewards}, spins_remaining = ${spins_remaining}, cost_per_spin = ${cost_per_spin}, token_used = ${tokenToStore}, updated_at = ${now} WHERE wallet_address = ${walletAddress}`;
+      await sql`UPDATE slots_players SET total_spins = ${total_spins}, total_wagered = ${total_wagered}, total_won = ${total_won}, unclaimed_rewards = ${unclaimed_rewards}, spins_remaining = ${spins_remaining}, cost_per_spin = ${cost_per_spin}, token_used = ${tokenToStore}, updated_at = ${now} WHERE wallet_address = ${walletAddress}`;
     }
 
     const resultSymbolsArr = Array.isArray(resultSymbols) ? resultSymbols : [];
     if (resultSymbolsArr.length > 0) {
       const spinCostRaw = BigInt(Math.floor((spinCost || 0) * 1e6)).toString();
       const wonAmountRaw = BigInt(Math.floor((wonAmount || 0) * 1e6)).toString();
-      await sql`INSERT INTO game_history (wallet_address, spin_cost, result_symbols, won_amount, token_used, timestamp)
+      await sql`INSERT INTO slots_game_history (wallet_address, spin_cost, result_symbols, won_amount, token_used, timestamp)
         VALUES (${walletAddress}, ${spinCostRaw}, ${resultSymbolsArr}, ${wonAmountRaw}, ${tokenForHistory}, ${now})`;
     }
 

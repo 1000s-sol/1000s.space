@@ -2,7 +2,6 @@ import { useMemo, type ReactNode } from "react";
 import { ConnectionProvider, WalletProvider as SolanaWalletProvider } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { PhantomWalletAdapter } from "@solana/wallet-adapter-phantom";
-import { SolflareWalletAdapter } from "@solana/wallet-adapter-solflare";
 
 const RPC_ENDPOINT =
   typeof import.meta.env.VITE_SOLANA_RPC === "string" && import.meta.env.VITE_SOLANA_RPC
@@ -10,13 +9,7 @@ const RPC_ENDPOINT =
     : "https://api.mainnet-beta.solana.com";
 
 export function SolanaWalletProviderWrap({ children }: { children: ReactNode }) {
-  const wallets = useMemo(
-    () => [
-      new PhantomWalletAdapter(),
-      new SolflareWalletAdapter(),
-    ],
-    []
-  );
+  const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
 
   return (
     <ConnectionProvider endpoint={RPC_ENDPOINT}>

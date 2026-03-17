@@ -3,12 +3,13 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Wallet } from "lucide-react";
 import { useWallet } from "../context/WalletContext";
 
-type GameId = "slots" | "roulette" | "blackjack";
+type GameId = "slots" | "roulette" | "coinflip" | "blackjack";
 type SlotsToken = "knukl" | "bux";
 
 const GAME_CONFIG: Record<GameId, { title: string; built: boolean; iframeSrc?: string }> = {
   slots: { title: "Slots", built: true, iframeSrc: "/casino/slots.html" },
   roulette: { title: "Roulette", built: true, iframeSrc: "/casino/roulette.html" },
+  coinflip: { title: "Coin flip", built: true, iframeSrc: "/casino/coinflip.html" },
   blackjack: { title: "Black Jack", built: false },
 };
 
@@ -21,6 +22,8 @@ export function GamePage() {
   );
   const config = gameId && gameId in GAME_CONFIG ? GAME_CONFIG[gameId as GameId] : null;
   const isSlots = config && gameId === "slots";
+  const isCoinflip = config && gameId === "coinflip";
+  const isTokenGame = isSlots || isCoinflip;
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const iframeWrapRef = useRef<HTMLDivElement>(null);
   const { walletAddress: mainWalletAddress } = useWallet();
@@ -55,7 +58,7 @@ export function GamePage() {
   const iframeWalletSyncedRef = useRef(false);
 
   useEffect(() => {
-    if (!isSlots) {
+    if (!isTokenGame) {
       iframeWalletSyncedRef.current = false;
       return;
     }
@@ -63,7 +66,7 @@ export function GamePage() {
       iframeWalletSyncedRef.current = true;
       setSlotsWalletAddress(mainWalletAddress);
     }
-  }, [isSlots, mainWalletAddress]);
+  }, [isTokenGame, mainWalletAddress]);
 
   useEffect(() => {
     const handler = (e: MessageEvent) => {
@@ -174,7 +177,7 @@ export function GamePage() {
 
   const iframeSrc =
     config.built && config.iframeSrc
-      ? isSlots
+      ? isTokenGame
         ? `${config.iframeSrc}?token=${slotsToken}&cb=2`
         : config.iframeSrc
       : undefined;
@@ -207,7 +210,7 @@ export function GamePage() {
           Back to 1000s
         </Link>
         <div className="flex-1 flex justify-center min-w-0">
-          {isSlots ? (
+          {isTokenGame ? (
             <div className="flex items-center gap-1 rounded-xl border-2 border-[var(--dashboard-border)] p-1 bg-[var(--dashboard-bg)]" role="tablist" aria-label="Play with token">
               <button
                 type="button"
@@ -240,7 +243,7 @@ export function GamePage() {
             <span className="text-base font-semibold text-white">{config.title}</span>
           )}
         </div>
-        {isSlots ? (
+        {isTokenGame ? (
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
               type="button"
@@ -295,7 +298,7 @@ export function GamePage() {
             Back
           </Link>
           <div className="flex-1 flex justify-center min-w-0">
-            {isSlots ? (
+            {isTokenGame ? (
               <div className="flex items-center gap-0.5 rounded-lg border-2 border-[var(--dashboard-border)] p-0.5 bg-[var(--dashboard-bg)] flex-1 min-w-0" role="tablist" aria-label="Play with token">
                 <button
                   type="button"
@@ -328,7 +331,7 @@ export function GamePage() {
               <span className="text-sm font-semibold text-white truncate">{config.title}</span>
             )}
           </div>
-          {isSlots && (
+          {isTokenGame && (
             <button
               type="button"
               onClick={handleToggleMusic}
@@ -342,7 +345,7 @@ export function GamePage() {
             </button>
           )}
         </div>
-        {isSlots && (
+        {isTokenGame && (
           <div className="flex items-center gap-2 w-full">
             {slotsWalletAddress ? (
               <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg border-2 border-[var(--dashboard-border)] bg-[var(--dashboard-surface)] min-w-0 flex-1">
