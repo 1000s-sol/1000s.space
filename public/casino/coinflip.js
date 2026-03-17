@@ -121,6 +121,23 @@ async function setupWalletConnection() {
     if (e.data.type === 'WALLET_ADDRESS' && e.data.address) {
       applyWalletConnected(e.data.address, connectContainer, walletInfo, walletAddress);
     }
+    if (e.data.type === 'TOKEN_CHANGED') {
+      window.__COINFLIP_TOKEN__ = (e.data.token === 'bux') ? 'bux' : 'knukl';
+      tokenBalance = 0;
+      flipsRemaining = 0;
+      totalWon = 0;
+      selectedSide = null;
+      updateDisplay();
+      updateButtonStates();
+      loadGameStats();
+      loadLeaderboard('flips');
+      if (wallet) {
+        updateBalance().then(() => loadPlayerData()).then(() => {
+          updateDisplay();
+          updateButtonStates();
+        }).catch(() => {});
+      }
+    }
     if (e.data.type === 'DISCONNECT_WALLET') {
       if (window.solana && window.solana.disconnect) window.solana.disconnect().catch(function () {});
       wallet = null;

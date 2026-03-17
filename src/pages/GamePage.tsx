@@ -165,6 +165,11 @@ export function GamePage() {
   const handleSlotsTokenChange = (t: SlotsToken) => {
     setSlotsToken(t);
     setSearchParams({ token: t }, { replace: true });
+    try {
+      iframeRef.current?.contentWindow?.postMessage({ type: "TOKEN_CHANGED", token: t }, "*");
+    } catch {
+      // ignore
+    }
   };
 
   if (!config) {

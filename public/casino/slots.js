@@ -360,6 +360,23 @@ async function setupWalletConnection() {
         if (e.data.type === 'WALLET_ADDRESS' && e.data.address) {
             applyWalletConnected(e.data.address, connectContainer, walletInfo, walletAddress);
         }
+        if (e.data.type === 'TOKEN_CHANGED') {
+            window.__SLOTS_TOKEN__ = (e.data.token === 'bux') ? 'bux' : 'knukl';
+            // Reset UI state tied to token, then reload DB + balances for the selected token.
+            xmaBalance = 0;
+            spinsRemaining = 0;
+            totalWon = 0;
+            updateDisplay();
+            updateButtonStates();
+            loadGameStats();
+            loadLeaderboard('spins');
+            if (wallet) {
+                updateBalance().then(function () { return loadPlayerData(); }).then(function () {
+                    updateDisplay();
+                    updateButtonStates();
+                }).catch(function(){});
+            }
+        }
         if (e.data.type === 'DISCONNECT_WALLET') {
             if (window.solana && window.solana.disconnect) window.solana.disconnect().catch(function(){});
             wallet = null;
