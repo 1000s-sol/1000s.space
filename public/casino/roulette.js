@@ -584,6 +584,20 @@
                 showDisconnected();
             });
         }
+        window.addEventListener('message', function (e) {
+            if (!e.data || !e.data.type) return;
+            if (e.data.type === 'CONNECT_WALLET' && connectBtn) connectBtn.click();
+            if (e.data.type === 'WALLET_ADDRESS' && e.data.address) {
+                showConnected(e.data.address);
+                initConnection();
+                updateBalance().then(function () { return loadPlayerData(); }).then(updateRouletteButtonStates);
+            }
+            if (e.data.type === 'DISCONNECT_WALLET') {
+                if (window.solana && window.solana.disconnect) window.solana.disconnect().catch(function () {});
+                showDisconnected();
+                if (window.self !== window.top && window.parent) try { window.parent.postMessage({ type: 'WALLET_DISCONNECTED' }, '*'); } catch (_) {}
+            }
+        });
     }
 
     function updateBalance() {
@@ -833,6 +847,7 @@
         };
         if (window.splToken) initWallet();
         else { window.addEventListener('splTokenLoaded', initWallet); setTimeout(initWallet, 2000); }
+        if (window.self !== window.top && window.parent) try { window.parent.postMessage({ type: 'REQUEST_WALLET' }, '*'); } catch (_) {}
         window.addEventListener('resize', renderChipStacks);
     }
 
