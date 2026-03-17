@@ -168,7 +168,53 @@
     .roulette-controls .btn { min-height: 52px; padding: 14px 18px; font-size: 15px; }
     .btn-roulette-spin { font-size: 17px; }
 }
-@media (max-width: 600px) { .roulette-page { background-position: left top; } }
+/* Very small screens: compact stats (Chips+Staked inline, Won below), chips inline, smaller reel */
+@media (max-width: 600px) {
+    .roulette-page { background-position: left top; }
+    .roulette-left-col .roulette-stats-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px 6px;
+        padding: 4px 6px;
+    }
+    .roulette-left-col .roulette-stats-bar .roulette-stat:nth-child(1),
+    .roulette-left-col .roulette-stats-bar .roulette-stat:nth-child(2) {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .roulette-left-col .roulette-stats-bar .roulette-stat:nth-child(3) {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 124px; /* same as 4 chips (28px each) + 3 gaps (4px) */
+        justify-self: center;
+        box-sizing: border-box;
+    }
+    .roulette-left-col .roulette-stat-label { font-size: 7px; }
+    .roulette-left-col .roulette-stat-value { font-size: 10px; min-width: 3ch; }
+    .roulette-left-col .roulette-chip-selector {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: center;
+        gap: 4px;
+    }
+    .roulette-left-col .roulette-chip {
+        width: 28px;
+        height: 28px;
+        font-size: 9px;
+    }
+    .roulette-left-col .roulette-reel-wrap {
+        transform: scale(0.5);
+        transform-origin: center center;
+    }
+    /* Narrower left col so table (right col) gets more width; same-width side columns on table */
+    .roulette-left-col { flex: 0 0 128px; width: 128px; min-width: 128px; max-width: 128px; }
+    .roulette-outside-left,
+    .roulette-dozens-right { max-width: 28px; min-width: 24px; }
+}
 
 /* Message modal (buy/collect success & errors) - same as slots/coinflip */
 .message-modal {
