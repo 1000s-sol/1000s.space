@@ -87,6 +87,7 @@ type AllocationData = {
   xCreditsDepleted?: boolean;
   totalAllocation: number;
   claimed: boolean;
+  runningTotalClaimed?: number;
 };
 
 export function AirdropSection() {
@@ -150,6 +151,7 @@ export function AirdropSection() {
         xCreditsDepleted: data.xCreditsDepleted as boolean | undefined,
         totalAllocation: Number(data.totalAllocation) ?? 0,
         claimed: Boolean(data.claimed),
+        runningTotalClaimed: Number(data.runningTotalClaimed) || 0,
       });
     };
     ensureLinkThenFetch()
@@ -197,6 +199,27 @@ export function AirdropSection() {
   const claimed = allocation?.claimed ?? false;
   const canClaim = walletConnected && !!walletAddress && totalAllocation > 0 && !claimed;
 
+  const fetchAllocation = () => {
+    if (!walletAddress) return Promise.resolve();
+    return fetch(`/api/airdrop/allocation?walletAddress=${encodeURIComponent(walletAddress)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.totalAllocation != null) {
+          setAllocation({
+            allocations: data.allocations ?? { archive: 0, casino: 0, x: 0, discord: 0 },
+            casinoBreakdown: data.casinoBreakdown,
+            archiveBreakdown: data.archiveBreakdown ?? [],
+            xFollowedAccounts: data.xFollowedAccounts ?? [],
+            xEngagement: data.xEngagement,
+            xCreditsDepleted: data.xCreditsDepleted,
+            totalAllocation: Number(data.totalAllocation) ?? 0,
+            claimed: Boolean(data.claimed),
+            runningTotalClaimed: Number(data.runningTotalClaimed) || 0,
+          });
+        }
+      });
+  };
+
   const handleClaim = () => {
     if (!walletAddress || claimLoading || !canClaim) return;
     setClaimError(null);
@@ -210,8 +233,8 @@ export function AirdropSection() {
       .then((data) => {
         if (data.error && !data.alreadyClaimed) {
           setClaimError(data.error);
-        } else if (data.success && allocation) {
-          setAllocation({ ...allocation, claimed: true });
+        } else if (data.success) {
+          fetchAllocation();
         }
       })
       .catch(() => setClaimError("Claim failed"))
@@ -443,8 +466,19 @@ export function AirdropSection() {
       <section>
         <h2 className="text-lg font-semibold text-white mb-3">Claim</h2>
         <p className="text-sm text-[var(--dashboard-muted)] mb-4">
-          One claim per day. Next claim available at midnight ET.
+          One claim per day. Next claim available at midnight ET. If you miss a day, that day’s allocation is lost; you can claim again the next day.
         </p>
+        {walletConnected && (
+          <div className="mb-4 p-4 rounded-xl border-2 border-[var(--dashboard-border-light)] bg-[var(--dashboard-surface)]">
+            <p className="text-sm text-[var(--dashboard-muted)] mb-1">Running total (claimed to date)</p>
+            <p className="text-xl font-bold tabular-nums text-[var(--dashboard-accent)]">
+              {allocationLoading ? "…" : (allocation?.runningTotalClaimed ?? 0)}
+            </p>
+            <p className="text-xs text-[var(--dashboard-muted)] mt-2">
+              This is the amount you will receive after mint and token launch.
+            </p>
+          </div>
+        )}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
           <div className="flex items-center justify-center gap-2 sm:gap-4 px-5 py-4 rounded-xl border-2 border-[var(--dashboard-border)] bg-[var(--dashboard-surface)]">
             <span className="text-sm text-[var(--dashboard-muted)]">Next claim in</span>

@@ -191,6 +191,15 @@ async function handler(req, res) {
         updated_at = NOW()
     `;
 
+    const runningTotalRows = await sql`
+      SELECT COALESCE(SUM(
+        allocation_archive + allocation_casino + allocation_x + allocation_discord
+      ), 0) AS running_total
+      FROM daily_airdrop_eligibility
+      WHERE wallet_address = ${walletAddress} AND claimed_at IS NOT NULL
+    `;
+    const runningTotalClaimed = Number(runningTotalRows[0]?.running_total ?? 0);
+
     return json(res, 200, {
       walletAddress,
       dateEt,
@@ -203,6 +212,7 @@ async function handler(req, res) {
       totalAllocation,
       claimed,
       claimedAt,
+      runningTotalClaimed,
     });
   } catch (err) {
     const short = formatDbConnectionErr(err);
