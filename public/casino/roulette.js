@@ -707,7 +707,7 @@
         var totalToCollectAmount = 0;
         isCollecting = true;
         updateRouletteButtonStates();
-        fetch('/api/load-player?walletAddress=' + encodeURIComponent(wallet) + '&gameType=roulette')
+        fetch('/api/load-player?walletAddress=' + encodeURIComponent(wallet) + '&gameType=roulette&tokenUsed=' + (isBuxToken() ? 'bux' : 'knukl'))
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (player) {
                 var currentUnclaimed = (player && player.unclaimedRewards) ? player.unclaimedRewards : unclaimedRewards;
@@ -738,7 +738,7 @@
                 });
             })
             .then(function (res) {
-                if (!res.ok) return res.json().then(function (d) { throw new Error(d.error || 'Save failed'); });
+                if (!res.ok) return res.json().then(function (d) { throw new Error(d.error || d.message || 'Save failed'); });
                 return fetch('/api/collect', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -746,7 +746,13 @@
                 });
             })
             .then(function (res) {
-                if (!res.ok) return res.json().then(function (d) { throw new Error(d.error || d.message || 'Collect failed'); });
+                if (!res.ok) {
+                    return res.json().then(function (d) {
+                        var msg = (d && (d.error || d.message)) || 'Collect failed';
+                        if (d && d.message && d.error !== d.message) msg = d.error + ': ' + d.message;
+                        throw new Error(msg);
+                    });
+                }
                 return res.json();
             })
             .then(function (data) {
@@ -763,7 +769,12 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ userWallet: wallet, signature: sig, amount: data.actualAmount || totalToCollectAmount, gameType: 'roulette' })
                         }).then(function (cr) {
-                            if (!cr.ok) return cr.json().then(function (d) { throw new Error(d.error || 'Confirm failed'); });
+                            if (!cr.ok) {
+                                return cr.json().then(function (d) {
+                                    var msg = (d && (d.error || d.message)) || 'Confirm failed';
+                                    throw new Error(msg);
+                                });
+                            }
                             return sig;
                         });
                     });
