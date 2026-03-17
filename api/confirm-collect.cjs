@@ -70,20 +70,20 @@ async function handler(req, res) {
 
     let rows, updateResult;
     if (gameTypeNorm === "coinflip") {
-      rows = await sql`SELECT unclaimed_rewards FROM coinflip_players WHERE wallet_address = ${userWallet}`;
+      rows = await sql`SELECT unclaimed_rewards FROM coinflip_players WHERE wallet_address = ${userWallet} AND token_used = ${tokenNorm}`;
       const playerData = rows[0];
       if (!playerData) return json(res, 404, { error: "Player not found" });
-      updateResult = await sql`UPDATE coinflip_players SET unclaimed_rewards = 0 WHERE wallet_address = ${userWallet} AND unclaimed_rewards = ${playerData.unclaimed_rewards} RETURNING wallet_address`;
+      updateResult = await sql`UPDATE coinflip_players SET unclaimed_rewards = 0 WHERE wallet_address = ${userWallet} AND token_used = ${tokenNorm} AND unclaimed_rewards = ${playerData.unclaimed_rewards} RETURNING wallet_address`;
     } else if (gameTypeNorm === "roulette") {
       rows = await sql`SELECT unclaimed_rewards FROM roulette_players WHERE wallet_address = ${userWallet} AND token_used = ${tokenNorm}`;
       const playerData = rows[0];
       if (!playerData) return json(res, 404, { error: "Player not found" });
       updateResult = await sql`UPDATE roulette_players SET unclaimed_rewards = 0 WHERE wallet_address = ${userWallet} AND token_used = ${tokenNorm} AND unclaimed_rewards = ${playerData.unclaimed_rewards} RETURNING wallet_address`;
     } else {
-      rows = await sql`SELECT unclaimed_rewards FROM slots_players WHERE wallet_address = ${userWallet}`;
+      rows = await sql`SELECT unclaimed_rewards FROM slots_players WHERE wallet_address = ${userWallet} AND token_used = ${tokenNorm}`;
       const playerData = rows[0];
       if (!playerData) return json(res, 404, { error: "Player not found" });
-      updateResult = await sql`UPDATE slots_players SET unclaimed_rewards = 0 WHERE wallet_address = ${userWallet} AND unclaimed_rewards = ${playerData.unclaimed_rewards} RETURNING wallet_address`;
+      updateResult = await sql`UPDATE slots_players SET unclaimed_rewards = 0 WHERE wallet_address = ${userWallet} AND token_used = ${tokenNorm} AND unclaimed_rewards = ${playerData.unclaimed_rewards} RETURNING wallet_address`;
     }
 
     if (!updateResult || updateResult.length === 0) {

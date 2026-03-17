@@ -59,8 +59,9 @@ async function handler(req, res) {
     }
 
     if (gameType === "coinflip") {
+      const tokenUsed = (req.query.tokenUsed || "knukl").toString().toLowerCase() === "bux" ? "bux" : "knukl";
       const rows = await sql`SELECT wallet_address, total_flips, total_won, total_wagered, unclaimed_rewards, flips_remaining, cost_per_flip, token_used, created_at
-        FROM coinflip_players WHERE wallet_address = ${walletAddress}`;
+        FROM coinflip_players WHERE wallet_address = ${walletAddress} AND token_used = ${tokenUsed}`;
       const player = rows[0];
 
       if (!player) {
@@ -94,8 +95,9 @@ async function handler(req, res) {
       });
     }
 
+    const tokenUsed = (req.query.tokenUsed || "knukl").toString().toLowerCase() === "bux" ? "bux" : "knukl";
     const rows = await sql`SELECT wallet_address, total_spins, total_won, total_wagered, unclaimed_rewards, spins_remaining, cost_per_spin, token_used, created_at
-      FROM slots_players WHERE wallet_address = ${walletAddress}`;
+      FROM slots_players WHERE wallet_address = ${walletAddress} AND token_used = ${tokenUsed}`;
     const player = rows[0];
 
     if (!player) {

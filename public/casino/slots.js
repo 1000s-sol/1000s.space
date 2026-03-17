@@ -1688,7 +1688,7 @@ async function loadPlayerData() {
     isLoadingPlayerData = true;
     
     try {
-        const response = await fetch(`/api/load-player?walletAddress=${encodeURIComponent(wallet)}&gameType=slots`, {
+        const response = await fetch(`/api/load-player?walletAddress=${encodeURIComponent(wallet)}&gameType=slots&tokenUsed=${typeof window.__SLOTS_TOKEN__ !== 'undefined' ? window.__SLOTS_TOKEN__ : 'knukl'}`, {
             signal: AbortSignal.timeout(25000) // 25s for cold DB/API
         });
         

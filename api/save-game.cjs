@@ -48,7 +48,7 @@ async function handler(req, res) {
     const now = new Date().toISOString();
 
     if (gameTypeNorm === "coinflip") {
-      const existing = await sql`SELECT wallet_address FROM coinflip_players WHERE wallet_address = ${walletAddress}`;
+      const existing = await sql`SELECT wallet_address FROM coinflip_players WHERE wallet_address = ${walletAddress} AND token_used = ${tokenUsedNorm}`;
       const existingPlayer = existing[0];
 
       let total_flips, total_wagered, total_won, unclaimed_rewards, flips_remaining, cost_per_flip, created_at;
@@ -74,7 +74,7 @@ async function handler(req, res) {
           await sql`INSERT INTO coinflip_purchases (wallet_address, token_used, cost_per_flip, num_flips, total_cost_raw) VALUES (${walletAddress}, ${tokenUsedNorm}, ${cost_per_flip}, ${flipsPurchased}, ${totalCostRaw})`;
         }
       } else {
-        const cur = await sql`SELECT total_flips, total_won, total_wagered, unclaimed_rewards, flips_remaining, cost_per_flip, token_used FROM coinflip_players WHERE wallet_address = ${walletAddress}`;
+        const cur = await sql`SELECT total_flips, total_won, total_wagered, unclaimed_rewards, flips_remaining, cost_per_flip FROM coinflip_players WHERE wallet_address = ${walletAddress} AND token_used = ${tokenUsedNorm}`;
         const c = cur[0];
         if (!c) return json(res, 500, { error: "Player not found after select" });
 
@@ -84,7 +84,6 @@ async function handler(req, res) {
         unclaimed_rewards = (c.unclaimed_rewards || "0").toString();
         flips_remaining = c.flips_remaining || 0;
         cost_per_flip = c.cost_per_flip ?? 100;
-        const currentTokenUsed = c.token_used || "knukl";
 
         if (flipsPurchased !== undefined && flipsPurchased > 0) {
           if (flips_remaining > 0) {
@@ -112,8 +111,7 @@ async function handler(req, res) {
           unclaimed_rewards = (BigInt(unclaimed_rewards) + BigInt(Math.floor(wonAmount * 1e6))).toString();
         }
 
-        const tokenToStore = flipsPurchased !== undefined && flipsPurchased > 0 ? tokenUsedNorm : currentTokenUsed;
-        await sql`UPDATE coinflip_players SET total_flips = ${total_flips}, total_wagered = ${total_wagered}, total_won = ${total_won}, unclaimed_rewards = ${unclaimed_rewards}, flips_remaining = ${flips_remaining}, cost_per_flip = ${cost_per_flip}, token_used = ${tokenToStore}, updated_at = ${now} WHERE wallet_address = ${walletAddress}`;
+        await sql`UPDATE coinflip_players SET total_flips = ${total_flips}, total_wagered = ${total_wagered}, total_won = ${total_won}, unclaimed_rewards = ${unclaimed_rewards}, flips_remaining = ${flips_remaining}, cost_per_flip = ${cost_per_flip}, updated_at = ${now} WHERE wallet_address = ${walletAddress} AND token_used = ${tokenUsedNorm}`;
       }
 
       if (choice && result) {
@@ -186,11 +184,10 @@ async function handler(req, res) {
       return json(res, 200, { success: true, message: "Game data saved successfully" });
     }
 
-    const existing = await sql`SELECT wallet_address FROM slots_players WHERE wallet_address = ${walletAddress}`;
+    const existing = await sql`SELECT wallet_address FROM slots_players WHERE wallet_address = ${walletAddress} AND token_used = ${tokenUsedNorm}`;
     const existingPlayer = existing[0];
 
     let total_spins, total_wagered, total_won, unclaimed_rewards, spins_remaining, cost_per_spin, created_at;
-    let tokenForHistory = tokenUsedNorm;
 
     if (!existingPlayer) {
       created_at = now;
@@ -211,7 +208,7 @@ async function handler(req, res) {
         await sql`INSERT INTO slots_purchases (wallet_address, token_used, cost_per_spin, num_spins, total_cost_raw) VALUES (${walletAddress}, ${tokenUsedNorm}, ${cost_per_spin}, ${spinsPurchased}, ${totalCostRaw})`;
       }
     } else {
-      const cur = await sql`SELECT total_spins, total_won, total_wagered, unclaimed_rewards, spins_remaining, cost_per_spin, token_used FROM slots_players WHERE wallet_address = ${walletAddress}`;
+      const cur = await sql`SELECT total_spins, total_won, total_wagered, unclaimed_rewards, spins_remaining, cost_per_spin FROM slots_players WHERE wallet_address = ${walletAddress} AND token_used = ${tokenUsedNorm}`;
       const c = cur[0];
       if (!c) return json(res, 500, { error: "Player not found after select" });
 
@@ -221,8 +218,6 @@ async function handler(req, res) {
       unclaimed_rewards = (c.unclaimed_rewards || "0").toString();
       spins_remaining = c.spins_remaining || 0;
       cost_per_spin = c.cost_per_spin ?? 100;
-      const currentTokenUsed = c.token_used || "knukl";
-      if (!(spinsPurchased !== undefined && spinsPurchased > 0)) tokenForHistory = currentTokenUsed;
 
       if (spinsPurchased !== undefined && spinsPurchased > 0) {
         if (spins_remaining > 0) {
@@ -257,8 +252,7 @@ async function handler(req, res) {
         unclaimed_rewards = (BigInt(unclaimed_rewards) + BigInt(Math.floor(wonAmount * 1e6))).toString();
       }
 
-      const tokenToStore = spinsPurchased !== undefined && spinsPurchased > 0 ? tokenUsedNorm : currentTokenUsed;
-      await sql`UPDATE slots_players SET total_spins = ${total_spins}, total_wagered = ${total_wagered}, total_won = ${total_won}, unclaimed_rewards = ${unclaimed_rewards}, spins_remaining = ${spins_remaining}, cost_per_spin = ${cost_per_spin}, token_used = ${tokenToStore}, updated_at = ${now} WHERE wallet_address = ${walletAddress}`;
+      await sql`UPDATE slots_players SET total_spins = ${total_spins}, total_wagered = ${total_wagered}, total_won = ${total_won}, unclaimed_rewards = ${unclaimed_rewards}, spins_remaining = ${spins_remaining}, cost_per_spin = ${cost_per_spin}, updated_at = ${now} WHERE wallet_address = ${walletAddress} AND token_used = ${tokenUsedNorm}`;
     }
 
     const resultSymbolsArr = Array.isArray(resultSymbols) ? resultSymbols : [];
@@ -266,7 +260,7 @@ async function handler(req, res) {
       const spinCostRaw = BigInt(Math.floor((spinCost || 0) * 1e6)).toString();
       const wonAmountRaw = BigInt(Math.floor((wonAmount || 0) * 1e6)).toString();
       await sql`INSERT INTO slots_game_history (wallet_address, spin_cost, result_symbols, won_amount, token_used, timestamp)
-        VALUES (${walletAddress}, ${spinCostRaw}, ${resultSymbolsArr}, ${wonAmountRaw}, ${tokenForHistory}, ${now})`;
+        VALUES (${walletAddress}, ${spinCostRaw}, ${resultSymbolsArr}, ${wonAmountRaw}, ${tokenUsedNorm}, ${now})`;
     }
 
     return json(res, 200, { success: true, message: "Game data saved successfully" });

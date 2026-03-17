@@ -253,7 +253,7 @@ async function loadPlayerData() {
   if (!wallet || isLoadingPlayer) return;
   isLoadingPlayer = true;
   try {
-    const response = await fetch(`/api/load-player?walletAddress=${encodeURIComponent(wallet)}&gameType=coinflip`, { signal: AbortSignal.timeout(25000) });
+    const response = await fetch(`/api/load-player?walletAddress=${encodeURIComponent(wallet)}&gameType=coinflip&tokenUsed=${typeof window.__COINFLIP_TOKEN__ !== 'undefined' ? window.__COINFLIP_TOKEN__ : 'knukl'}`, { signal: AbortSignal.timeout(25000) });
     if (!response.ok) return;
     const data = await response.json();
     if (data.unclaimedRewards > 0) totalWon = data.unclaimedRewards;
@@ -450,7 +450,7 @@ async function withdrawWinnings() {
       const confirmRes = await fetch('/api/confirm-collect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userWallet: wallet, signature: sig, amount: actualAmount, gameType: 'coinflip' })
+        body: JSON.stringify({ userWallet: wallet, signature: sig, amount: actualAmount, gameType: 'coinflip', token: typeof window.__COINFLIP_TOKEN__ !== 'undefined' ? window.__COINFLIP_TOKEN__ : 'knukl' })
       });
       const confirmData = await confirmRes.json();
       if (confirmRes.status === 200 && !confirmData.alreadyCleared) {

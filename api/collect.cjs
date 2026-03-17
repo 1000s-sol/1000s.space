@@ -69,16 +69,15 @@ async function handler(req, res) {
       const dbDecimals = 6;
       let playerData, dbUnclaimed;
       if (gameTypeNorm === "coinflip") {
-        const rows = await sql`SELECT unclaimed_rewards, token_used FROM coinflip_players WHERE wallet_address = ${userWallet}`;
+        const rows = await sql`SELECT unclaimed_rewards FROM coinflip_players WHERE wallet_address = ${userWallet} AND token_used = ${token}`;
         playerData = rows[0];
         dbUnclaimed = playerData ? Number(playerData.unclaimed_rewards || 0) / Math.pow(10, dbDecimals) : 0;
-        if (playerData && playerData.token_used) token = String(playerData.token_used).toLowerCase() === "bux" ? "bux" : "knukl";
       } else if (gameTypeNorm === "roulette") {
         const rows = await sql`SELECT unclaimed_rewards FROM roulette_players WHERE wallet_address = ${userWallet} AND token_used = ${token}`;
         playerData = rows[0];
         dbUnclaimed = playerData ? Number(playerData.unclaimed_rewards || 0) / Math.pow(10, dbDecimals) : 0;
       } else {
-        const rows = await sql`SELECT unclaimed_rewards FROM slots_players WHERE wallet_address = ${userWallet}`;
+        const rows = await sql`SELECT unclaimed_rewards FROM slots_players WHERE wallet_address = ${userWallet} AND token_used = ${token}`;
         playerData = rows[0];
         dbUnclaimed = playerData ? Number(playerData.unclaimed_rewards || 0) / Math.pow(10, dbDecimals) : 0;
       }
