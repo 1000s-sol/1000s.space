@@ -229,7 +229,6 @@ function setupSelectionButtons() {
     selectedSide = side;
     btnHeads.classList.toggle('selected', side === 'heads');
     btnTails.classList.toggle('selected', side === 'tails');
-    if (coinImage && !isFlipping) coinImage.src = getCoinImagePath(side);
     updateButtonStates();
   }
 
@@ -358,6 +357,8 @@ async function purchaseFlips() {
   }
 }
 
+const COIN_SPIN_DURATION_MS = 1600;
+
 async function doFlip() {
   if (isFlipping || flipsRemaining <= 0 || !selectedSide || !wallet) return;
   const costPerFlip = parseInt(document.getElementById('cost-per-flip').value, 10) || 100;
@@ -370,20 +371,27 @@ async function doFlip() {
   flipsRemaining -= 1;
 
   const coinImage = document.getElementById('coin-image');
-  if (coinImage) coinImage.src = getCoinImagePath(result);
-
-  const resultEl = document.getElementById('flip-result');
-  const resultMsg = document.getElementById('flip-result-message');
-  const resultAmount = document.getElementById('flip-result-amount');
-  if (resultEl && resultMsg && resultAmount) {
-    resultMsg.textContent = result === selectedSide ? 'You win!' : 'You lose';
-    resultAmount.textContent = won > 0 ? `${won.toFixed(2)} ${getTokenLabel()}` : '';
-    resultEl.style.display = 'block';
-    setTimeout(() => { resultEl.style.display = 'none'; }, 2000);
+  if (coinImage) {
+    coinImage.classList.add('coin-spinning');
   }
 
-  try {
-    await fetch('/api/save-game', {
+  setTimeout(() => {
+    if (coinImage) {
+      coinImage.classList.remove('coin-spinning');
+      coinImage.src = getCoinImagePath(result);
+    }
+
+    const resultEl = document.getElementById('flip-result');
+    const resultMsg = document.getElementById('flip-result-message');
+    const resultAmount = document.getElementById('flip-result-amount');
+    if (resultEl && resultMsg && resultAmount) {
+      resultMsg.textContent = result === selectedSide ? 'You win!' : 'You lose';
+      resultAmount.textContent = won > 0 ? `${won.toFixed(2)} ${getTokenLabel()}` : '';
+      resultEl.style.display = 'block';
+      setTimeout(() => { resultEl.style.display = 'none'; }, 2000);
+    }
+
+    fetch('/api/save-game', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -397,12 +405,12 @@ async function doFlip() {
         updateUnclaimedRewards: totalWon,
         tokenUsed: isBuxToken() ? 'bux' : 'knukl'
       })
-    });
-  } catch (_) {}
+    }).catch(() => {});
 
-  updateDisplay();
-  updateButtonStates();
-  isFlipping = false;
+    updateDisplay();
+    updateButtonStates();
+    isFlipping = false;
+  }, COIN_SPIN_DURATION_MS);
 }
 
 async function withdrawWinnings() {

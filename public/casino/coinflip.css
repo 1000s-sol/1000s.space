@@ -82,6 +82,20 @@
     border-radius: 50%;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     flex-shrink: 0;
+    transform-origin: center center;
+}
+
+.coin-img.coin-spinning {
+    animation: coin-spin 1.6s ease-out forwards;
+}
+
+@keyframes coin-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(2520deg);
+    }
 }
 
 .selection-list {
@@ -191,9 +205,32 @@
     font-size: clamp(24px, 3vw, 38px) !important;
 }
 
-@media (max-width: 600px) {
+/* Mobile: 50/50 stats and play area (same as slots) */
+@media (max-width: 768px) {
     .coinflip-wrapper {
-        grid-template-rows: auto 1fr auto;
+        display: grid !important;
+        grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto !important;
+        gap: 0 2px !important;
+        row-gap: 0 !important;
+        height: 100% !important;
+        min-height: 0 !important;
+    }
+    .coinflip-wrapper .game-stats-bar {
+        align-self: start !important;
+        flex-shrink: 0 !important;
+    }
+    .coinflip-wrapper .coinflip-main {
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: 100% !important;
+        flex: 1 1 0 !important;
+    }
+    .coinflip-wrapper .controls-panel {
+        align-self: end !important;
+        padding: 4px 6px 4px !important;
+        flex: none !important;
+        min-height: 0 !important;
+        height: auto !important;
     }
     .coinflip-main { padding: 4px; }
     .coin-area { gap: 8px; }
