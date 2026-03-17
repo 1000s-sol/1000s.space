@@ -76,25 +76,31 @@
     max-width: 420px;
 }
 
+.coin-flip-wrapper {
+    perspective: 800px;
+    flex-shrink: 0;
+}
+
 .coin-img {
     width: clamp(120px, 25vw, 180px);
     height: auto;
     border-radius: 50%;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-    flex-shrink: 0;
+    display: block;
     transform-origin: center center;
+    backface-visibility: visible;
 }
 
 .coin-img.coin-spinning {
-    animation: coin-spin 1.6s ease-out forwards;
+    animation: coin-flip 1.6s ease-out forwards;
 }
 
-@keyframes coin-spin {
+@keyframes coin-flip {
     0% {
-        transform: rotate(0deg);
+        transform: rotateY(0deg);
     }
     100% {
-        transform: rotate(2520deg);
+        transform: rotateY(1800deg);
     }
 }
 

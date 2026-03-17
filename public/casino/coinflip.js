@@ -444,8 +444,7 @@ async function withdrawWinnings() {
     const { Transaction } = window.solanaWeb3 || solanaWeb3;
     const transactionBytes = Uint8Array.from(atob(transactionBase64), c => c.charCodeAt(0));
     const tx = Transaction.from(transactionBytes);
-    const signed = await window.solana.signTransaction(tx);
-    const sig = await connection.sendRawTransaction(signed.serialize(), { skipPreflight: false, maxRetries: 3 });
+    const sig = await connection.sendRawTransaction(tx.serialize(), { skipPreflight: false, maxRetries: 3 });
     await connection.confirmTransaction(sig, 'confirmed');
 
     let confirmed = false;
