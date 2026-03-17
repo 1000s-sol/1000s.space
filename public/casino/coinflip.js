@@ -92,6 +92,14 @@ function initConnection() {
   }
 }
 
+function waitForSplToken() {
+  if (window.splToken) return Promise.resolve();
+  return new Promise(function (resolve) {
+    var t = setTimeout(function () { resolve(); }, 5000);
+    window.addEventListener('splTokenLoaded', function () { clearTimeout(t); resolve(); }, { once: true });
+  });
+}
+
 async function applyWalletConnected(addr, connectContainer, walletInfo, walletAddressEl) {
   wallet = addr;
   if (walletAddressEl) walletAddressEl.textContent = addr ? (addr.slice(0, 4) + '...' + addr.slice(-4)) : '';
@@ -99,8 +107,10 @@ async function applyWalletConnected(addr, connectContainer, walletInfo, walletAd
   if (walletInfo) walletInfo.style.display = addr ? 'flex' : 'none';
   if (addr) {
     initConnection();
+    await waitForSplToken();
     await updateBalance();
     await loadPlayerData();
+    updateDisplay();
     updateButtonStates();
     try { window.parent.postMessage({ type: 'WALLET_CONNECTED', address: addr }, '*'); } catch (_) {}
   } else {
