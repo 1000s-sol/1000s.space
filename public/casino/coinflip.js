@@ -227,14 +227,20 @@ function updateDisplay() {
   if (flipsRemainingEl) flipsRemainingEl.textContent = flipsRemaining;
 }
 
+// Only one of Buy / Flip / Collect is ever enabled
 function updateButtonStates() {
   const purchaseBtn = document.getElementById('purchase-flips');
   const flipBtn = document.getElementById('flip-button');
   const withdrawBtn = document.getElementById('withdraw-button');
+  if (!purchaseBtn || !flipBtn || !withdrawBtn) return;
 
-  purchaseBtn.disabled = !wallet || isCollecting || flipsRemaining > 0 || totalWon > 0;
-  flipBtn.disabled = !wallet || flipsRemaining <= 0 || !selectedSide || isFlipping || isCollecting;
-  withdrawBtn.disabled = !wallet || totalWon <= 0 || isCollecting;
+  const buyEnabled = !!wallet && !isCollecting && flipsRemaining === 0 && totalWon === 0;
+  const flipEnabled = !!wallet && !isCollecting && flipsRemaining > 0 && !!selectedSide && !isFlipping;
+  const collectEnabled = !!wallet && !isCollecting && flipsRemaining === 0 && totalWon > 0;
+
+  purchaseBtn.disabled = !buyEnabled;
+  flipBtn.disabled = !flipEnabled;
+  withdrawBtn.disabled = !collectEnabled;
 }
 
 function setupSelectionButtons() {

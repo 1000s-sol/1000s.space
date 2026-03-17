@@ -1638,31 +1638,26 @@ async function loadLeaderboard(sortBy = 'spins') {
     }
 }
 
-// Update Button States
+// Update Button States — only one of Buy / Spin / Collect is ever enabled
 function updateButtonStates() {
     const purchaseBtn = document.getElementById('purchase-spins');
     const spinBtn = document.getElementById('spin-button');
     const withdrawBtn = document.getElementById('withdraw-button');
-    
-    // Enable purchase only when wallet connected, no spins remaining, no uncollected prizes, and not collecting
-    purchaseBtn.disabled = !wallet || isCollecting || spinsRemaining > 0 || totalWon > 0;
-    if (wallet && !isCollecting && spinsRemaining === 0 && totalWon === 0) {
-        purchaseBtn.style.opacity = '1';
-        purchaseBtn.style.cursor = 'pointer';
-    } else {
-        purchaseBtn.style.opacity = '0.5';
-        purchaseBtn.style.cursor = 'not-allowed';
-    }
-    
-    // Enable spin button when spins > 0 (can always click to toggle autospin)
-    // Disable only if collecting or no spins and not autospinning
-    spinBtn.disabled = (spinsRemaining <= 0 && !isAutoSpinning) || isCollecting;
-    
-    // Update spin button text
+    if (!purchaseBtn || !spinBtn || !withdrawBtn) return;
+
+    const buyEnabled = !!wallet && !isCollecting && spinsRemaining === 0 && totalWon === 0;
+    const spinEnabled = !!wallet && !isCollecting && spinsRemaining > 0;
+    const collectEnabled = !!wallet && !isCollecting && spinsRemaining === 0 && totalWon > 0;
+
+    purchaseBtn.disabled = !buyEnabled;
+    purchaseBtn.style.opacity = buyEnabled ? '1' : '0.5';
+    purchaseBtn.style.cursor = buyEnabled ? 'pointer' : 'not-allowed';
+
+    spinBtn.disabled = !spinEnabled;
+
+    withdrawBtn.disabled = !collectEnabled;
+
     updateSpinButtonText();
-    
-    // Enable collect button when wallet connected and total won > 0, but disable if collecting
-    withdrawBtn.disabled = !wallet || totalWon <= 0 || isCollecting;
 }
 
 // Database Functions
