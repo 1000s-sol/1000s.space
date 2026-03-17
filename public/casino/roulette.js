@@ -476,9 +476,8 @@
                 updateChipUI();
                 updateToCollectUI();
                 updateReplaceButton();
-                updateRouletteButtonStates();
-                btn.disabled = false;
                 spinInProgress = false;
+                updateRouletteButtonStates();
                 updatePopups();
             });
         });
