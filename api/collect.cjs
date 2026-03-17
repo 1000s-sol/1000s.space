@@ -44,8 +44,8 @@ async function handler(req, res) {
   try {
     let { userWallet, amount, token = "knukl", gameType = "slots" } = req.body;
     const gameTypeNorm = (gameType || "slots").toLowerCase();
-    if (gameTypeNorm !== "slots" && gameTypeNorm !== "coinflip") {
-      return json(res, 400, { error: "gameType must be slots or coinflip" });
+    if (gameTypeNorm !== "slots" && gameTypeNorm !== "coinflip" && gameTypeNorm !== "roulette") {
+      return json(res, 400, { error: "gameType must be slots, coinflip, or roulette" });
     }
     if (!userWallet || !amount || amount <= 0) {
       return json(res, 400, { error: "Invalid request: userWallet and amount required" });
@@ -75,6 +75,10 @@ async function handler(req, res) {
       let playerData, dbUnclaimed;
       if (gameTypeNorm === "coinflip") {
         const rows = await sql`SELECT unclaimed_rewards FROM coinflip_players WHERE wallet_address = ${userWallet}`;
+        playerData = rows[0];
+        dbUnclaimed = playerData ? Number(playerData.unclaimed_rewards || 0) / Math.pow(10, dbDecimals) : 0;
+      } else if (gameTypeNorm === "roulette") {
+        const rows = await sql`SELECT unclaimed_rewards FROM roulette_players WHERE wallet_address = ${userWallet}`;
         playerData = rows[0];
         dbUnclaimed = playerData ? Number(playerData.unclaimed_rewards || 0) / Math.pow(10, dbDecimals) : 0;
       } else {

@@ -14,7 +14,7 @@ async function handler(req, res) {
     const walletAddress = req.query.walletAddress;
     const gameType = (req.query.gameType || "slots").toLowerCase();
 
-    if (gameType !== "slots" && gameType !== "coinflip") return json(res, 400, { error: "gameType must be slots or coinflip" });
+    if (gameType !== "slots" && gameType !== "coinflip" && gameType !== "roulette") return json(res, 400, { error: "gameType must be slots, coinflip, or roulette" });
     if (!walletAddress) return json(res, 400, { error: "walletAddress query parameter is required" });
 
     try {
@@ -22,6 +22,39 @@ async function handler(req, res) {
       new PublicKey(walletAddress);
     } catch (_) {
       return json(res, 400, { error: "Invalid wallet address format" });
+    }
+
+    if (gameType === "roulette") {
+      const rows = await sql`SELECT wallet_address, total_spins, total_won, total_wagered, unclaimed_rewards, chips_balance, cost_per_chip, token_used, created_at
+        FROM roulette_players WHERE wallet_address = ${walletAddress}`;
+      const player = rows[0];
+      if (!player) {
+        return json(res, 200, {
+          walletAddress,
+          totalSpins: 0,
+          totalWon: 0,
+          totalWagered: 0,
+          unclaimedRewards: 0,
+          chipsBalance: 0,
+          costPerChip: 100,
+          tokenUsed: "knukl",
+          createdAt: null,
+        });
+      }
+      const totalWon = Number(player.total_won || 0) / Math.pow(10, TOKEN_DECIMALS);
+      const totalWagered = Number(player.total_wagered || 0) / Math.pow(10, TOKEN_DECIMALS);
+      const unclaimedRewards = Number(player.unclaimed_rewards || 0) / Math.pow(10, TOKEN_DECIMALS);
+      return json(res, 200, {
+        walletAddress: player.wallet_address,
+        totalSpins: player.total_spins || 0,
+        totalWon,
+        totalWagered,
+        unclaimedRewards,
+        chipsBalance: player.chips_balance || 0,
+        costPerChip: player.cost_per_chip ?? 100,
+        tokenUsed: (player.token_used || "knukl").toLowerCase(),
+        createdAt: player.created_at,
+      });
     }
 
     if (gameType === "coinflip") {

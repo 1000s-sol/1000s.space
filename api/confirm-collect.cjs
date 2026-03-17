@@ -17,8 +17,8 @@ async function handler(req, res) {
   try {
     const { userWallet, signature, amount, gameType = "slots" } = req.body;
     const gameTypeNorm = (gameType || "slots").toLowerCase();
-    if (gameTypeNorm !== "slots" && gameTypeNorm !== "coinflip") {
-      return json(res, 400, { error: "gameType must be slots or coinflip" });
+    if (gameTypeNorm !== "slots" && gameTypeNorm !== "coinflip" && gameTypeNorm !== "roulette") {
+      return json(res, 400, { error: "gameType must be slots, coinflip, or roulette" });
     }
     if (!userWallet || !signature || !amount || amount <= 0) {
       return json(res, 400, { error: "Invalid request: userWallet, signature, and amount required" });
@@ -72,6 +72,11 @@ async function handler(req, res) {
       const playerData = rows[0];
       if (!playerData) return json(res, 404, { error: "Player not found" });
       updateResult = await sql`UPDATE coinflip_players SET unclaimed_rewards = 0 WHERE wallet_address = ${userWallet} AND unclaimed_rewards = ${playerData.unclaimed_rewards} RETURNING wallet_address`;
+    } else if (gameTypeNorm === "roulette") {
+      rows = await sql`SELECT unclaimed_rewards FROM roulette_players WHERE wallet_address = ${userWallet}`;
+      const playerData = rows[0];
+      if (!playerData) return json(res, 404, { error: "Player not found" });
+      updateResult = await sql`UPDATE roulette_players SET unclaimed_rewards = 0 WHERE wallet_address = ${userWallet} AND unclaimed_rewards = ${playerData.unclaimed_rewards} RETURNING wallet_address`;
     } else {
       rows = await sql`SELECT unclaimed_rewards FROM slots_players WHERE wallet_address = ${userWallet}`;
       const playerData = rows[0];

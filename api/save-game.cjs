@@ -26,12 +26,16 @@ async function handler(req, res) {
       flipCost,
       choice,
       result,
+      // roulette
+      chipsPurchased,
+      costPerChip,
+      updateChipsBalance,
     } = req.body;
 
     const tokenUsedNorm = (tokenUsed || token || "knukl").toLowerCase() === "bux" ? "bux" : "knukl";
     const gameTypeNorm = (gameType || "slots").toLowerCase();
 
-    if (gameTypeNorm !== "slots" && gameTypeNorm !== "coinflip") return json(res, 400, { error: "gameType must be slots or coinflip" });
+    if (gameTypeNorm !== "slots" && gameTypeNorm !== "coinflip" && gameTypeNorm !== "roulette") return json(res, 400, { error: "gameType must be slots, coinflip, or roulette" });
     if (!walletAddress) return json(res, 400, { error: "walletAddress is required" });
 
     try {
@@ -119,6 +123,68 @@ async function handler(req, res) {
           VALUES (${walletAddress}, ${flipCostRaw}, ${choice}, ${result}, ${wonAmountRaw}, ${tokenUsedNorm}, ${now})`;
       }
 
+      return json(res, 200, { success: true, message: "Game data saved successfully" });
+    }
+
+    if (gameTypeNorm === "roulette") {
+      const existing = await sql`SELECT wallet_address FROM roulette_players WHERE wallet_address = ${walletAddress}`;
+      const existingPlayer = existing[0];
+      const nowR = new Date().toISOString();
+      let total_spins_r, total_wagered_r, total_won_r, unclaimed_rewards_r, chips_balance_r, cost_per_chip_r, created_at_r;
+
+      if (!existingPlayer) {
+        created_at_r = nowR;
+        total_spins_r = resultSymbols && resultSymbols.length > 0 ? 1 : 0;
+        total_wagered_r = BigInt(Math.floor((spinCost || 0) * 1e6)).toString();
+        total_won_r = BigInt(Math.floor((wonAmount || 0) * 1e6)).toString();
+        unclaimed_rewards_r = updateUnclaimedRewards !== undefined ? BigInt(Math.floor(updateUnclaimedRewards * 1e6)).toString() : BigInt(0).toString();
+        chips_balance_r = chipsPurchased !== undefined && chipsPurchased > 0 ? chipsPurchased : (updateChipsBalance !== undefined ? Math.max(0, Math.floor(updateChipsBalance)) : 0);
+        cost_per_chip_r = (costPerChip && costPerChip > 0) || (chipsPurchased > 0) ? Math.floor(costPerChip || 100) : 100;
+        await sql`INSERT INTO roulette_players (wallet_address, total_spins, total_wagered, total_won, unclaimed_rewards, chips_balance, cost_per_chip, token_used, created_at, updated_at)
+          VALUES (${walletAddress}, ${total_spins_r}, ${total_wagered_r}, ${total_won_r}, ${unclaimed_rewards_r}, ${chips_balance_r}, ${cost_per_chip_r}, ${tokenUsedNorm}, ${created_at_r}, ${nowR})`;
+        if (chipsPurchased !== undefined && chipsPurchased > 0) {
+          const totalCostRaw = BigInt(Math.floor((cost_per_chip_r * chipsPurchased) * 1e6)).toString();
+          await sql`INSERT INTO roulette_purchases (wallet_address, token_used, cost_per_chip, num_chips, total_cost_raw) VALUES (${walletAddress}, ${tokenUsedNorm}, ${cost_per_chip_r}, ${chipsPurchased}, ${totalCostRaw})`;
+        }
+      } else {
+        const cur = await sql`SELECT total_spins, total_won, total_wagered, unclaimed_rewards, chips_balance, cost_per_chip, token_used FROM roulette_players WHERE wallet_address = ${walletAddress}`;
+        const c = cur[0];
+        if (!c) return json(res, 500, { error: "Player not found" });
+        total_spins_r = c.total_spins || 0;
+        total_wagered_r = (c.total_wagered || 0).toString();
+        total_won_r = (c.total_won || 0).toString();
+        unclaimed_rewards_r = (c.unclaimed_rewards || "0").toString();
+        chips_balance_r = c.chips_balance || 0;
+        cost_per_chip_r = c.cost_per_chip ?? 100;
+        const currentToken = c.token_used || "knukl";
+
+        if (chipsPurchased !== undefined && chipsPurchased > 0) {
+          if (chips_balance_r > 0) return json(res, 400, { error: "Use or collect chips before buying more.", chipsBalance: chips_balance_r });
+          chips_balance_r = chips_balance_r + chipsPurchased;
+          cost_per_chip_r = costPerChip && costPerChip > 0 ? Math.floor(costPerChip) : 100;
+          const totalCostRaw = BigInt(Math.floor((cost_per_chip_r * chipsPurchased) * 1e6)).toString();
+          await sql`INSERT INTO roulette_purchases (wallet_address, token_used, cost_per_chip, num_chips, total_cost_raw) VALUES (${walletAddress}, ${tokenUsedNorm}, ${cost_per_chip_r}, ${chipsPurchased}, ${totalCostRaw})`;
+        } else if (updateChipsBalance !== undefined) {
+          chips_balance_r = Math.max(0, Math.floor(updateChipsBalance));
+          if (resultSymbols && resultSymbols.length > 0) {
+            total_spins_r = total_spins_r + 1;
+            const stakeRaw = BigInt(Math.floor((spinCost || c.cost_per_chip || 100) * 1e6));
+            total_wagered_r = (BigInt(total_wagered_r) + stakeRaw).toString();
+            total_won_r = (BigInt(total_won_r) + BigInt(Math.floor((wonAmount || 0) * 1e6))).toString();
+          }
+        }
+        if (updateUnclaimedRewards !== undefined) unclaimed_rewards_r = BigInt(Math.floor(updateUnclaimedRewards * 1e6)).toString();
+        else if (wonAmount > 0) unclaimed_rewards_r = (BigInt(unclaimed_rewards_r) + BigInt(Math.floor(wonAmount * 1e6))).toString();
+        const tokenToStore = (chipsPurchased !== undefined && chipsPurchased > 0) ? tokenUsedNorm : currentToken;
+        await sql`UPDATE roulette_players SET total_spins = ${total_spins_r}, total_wagered = ${total_wagered_r}, total_won = ${total_won_r}, unclaimed_rewards = ${unclaimed_rewards_r}, chips_balance = ${chips_balance_r}, cost_per_chip = ${cost_per_chip_r}, token_used = ${tokenToStore}, updated_at = ${nowR} WHERE wallet_address = ${walletAddress}`;
+      }
+      if (resultSymbols && resultSymbols.length > 0) {
+        const resultNumber = String(resultSymbols[0]);
+        const spinCostRaw = BigInt(Math.floor((spinCost || 0) * 1e6)).toString();
+        const wonAmountRaw = BigInt(Math.floor((wonAmount || 0) * 1e6)).toString();
+        await sql`INSERT INTO roulette_game_history (wallet_address, spin_cost, result_number, won_amount, token_used, timestamp)
+          VALUES (${walletAddress}, ${spinCostRaw}, ${resultNumber}, ${wonAmountRaw}, ${tokenUsedNorm}, ${nowR})`;
+      }
       return json(res, 200, { success: true, message: "Game data saved successfully" });
     }
 

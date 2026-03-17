@@ -23,7 +23,8 @@ export function GamePage() {
   const config = gameId && gameId in GAME_CONFIG ? GAME_CONFIG[gameId as GameId] : null;
   const isSlots = config && gameId === "slots";
   const isCoinflip = config && gameId === "coinflip";
-  const isTokenGame = isSlots || isCoinflip;
+  const isRoulette = config && gameId === "roulette";
+  const isTokenGame = isSlots || isCoinflip || isRoulette;
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const iframeWrapRef = useRef<HTMLDivElement>(null);
   const { walletAddress: mainWalletAddress } = useWallet();
